@@ -35,15 +35,17 @@ _images = weakref.WeakValueDictionary()
 _image_dir = "images"
 # Use LRU to make sure the weakref deletion isn't too aggressive
 @lru.cache()
-def get(name, recoloring = None):
+def get(name, recoloring = None, rect = None):
     if (name, recoloring) not in _images:
         if recoloring is None:
             i = pygame.image.load(os.path.join(_image_dir,name))
             # Colorkey has no effect if the image already has alpha
             i.set_colorkey((0,0,255))
             i = i.convert_alpha(pygame.Surface((1,1), pygame.SRCALPHA, 32))
-        else:
+        elif rect is None:
             i = recolor(get(name),recoloring)
+        else:
+            i = get(name,recoloring).subsurface(rect)
         _images[(name,recoloring)] = i
 
     return _images[(name,recoloring)]
