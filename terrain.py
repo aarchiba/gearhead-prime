@@ -20,9 +20,12 @@
 #       
 # 
 
+import yaml
+
 import image
 
-class Terrain(object):
+class Terrain(yaml.YAMLObject):
+    yaml_tag = "!Terrain"
     
     def __init__(self, name, roguechar, sdl_image_spec, 
                  passable=True, opaque=False, description=None):
@@ -38,6 +41,14 @@ class Terrain(object):
         if self._sprite is None:
             self._sprite = image.get(*self.sdl_image_spec)
         return self._sprite
+        
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_sprite']
+        return d
+    def __setstate__(self,d):
+        self.__dict__ = d
+        self._sprite = None
         
 void = Terrain("void", " ", ("big_terrain.png", None, (576,0,64,96)))
 floor = Terrain("floor", ".", ("big_terrain.png", None, (576,96,64,96)))
