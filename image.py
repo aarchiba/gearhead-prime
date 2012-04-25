@@ -36,19 +36,20 @@ _image_dir = "images"
 # Use LRU to make sure the weakref deletion isn't too aggressive
 @lru.cache()
 def get(name, recoloring = None, rect = None):
-    if (name, recoloring) not in _images:
-        if recoloring is None:
+    if (name, recoloring, rect) not in _images:
+        print "Looking up image for", (name, recoloring, rect)
+        if rect is not None:
+            i = get(name,recoloring).subsurface(rect)
+        elif recoloring is not None:
+            i = recolor(get(name),recoloring)
+        else:
             i = pygame.image.load(os.path.join(_image_dir,name))
             # Colorkey has no effect if the image already has alpha
             i.set_colorkey((0,0,255))
             i = i.convert_alpha(pygame.Surface((1,1), pygame.SRCALPHA, 32))
-        elif rect is None:
-            i = recolor(get(name),recoloring)
-        else:
-            i = get(name,recoloring).subsurface(rect)
-        _images[(name,recoloring)] = i
+        _images[(name,recoloring,rect)] = i
 
-    return _images[(name,recoloring)]
+    return _images[(name,recoloring,rect)]
 
 def recolor(image, mode):
     if mode is None:

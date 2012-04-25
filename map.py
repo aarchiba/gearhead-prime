@@ -21,6 +21,7 @@
 #       
 
 import numpy as np
+import terrain
 
 class Map(object):
     def __init__(self, size):
@@ -28,7 +29,7 @@ class Map(object):
         self.w, self.h = self.size
         self.map = np.zeros(self.size, np.uint8)
         self.seen = np.zeros(self.size, np.uint8)
-        self.terrain_types = [" "]
+        self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
 
     def add_terrain_type(self, t):
@@ -49,7 +50,7 @@ class Map(object):
     
     def __str__(self):
         return ("Map {0} by {1}:\n".format(self.w, self.h) + 
-            "\n".join("".join(self.terrain_types[v] for v in l) 
+            "\n".join("".join(self.terrain_types[v].roguechar for v in l) 
                         for l in self.map.T))
 
 def load_ascii_map(f):
@@ -64,6 +65,12 @@ def load_ascii_map(f):
     M = Map((w,len(a)))
     for j, l in enumerate(a):
         for i, c in enumerate(l):
+            if c=="#":
+                c = terrain.wall
+            elif c==".":
+                c = terrain.floor
+            else:
+                c = terrain.void
             M.set_terrain((i,j),c)
     return M
 
