@@ -20,10 +20,13 @@
 #       
 #       
 
+import collections
+
 import pygame
 from pygame import Rect
 
 import map
+import image
 
 class SDLMap(object):
     """Graphical representation of a particular map
@@ -44,11 +47,14 @@ class SDLMap(object):
         self.view_x = 0
         self.view_y = 0
         self.map_to_draw = map_to_draw
+        self.mouse_cursor = image.get("target64.png", None, (0,0,64,64))
     
     def draw(self, screen, work_rects=None):
         """Draw the map to the screen"""
         if work_rects is None:
             work_rects = [Rect(0,0,screen.get_width(),screen.get_height())]
+        extra_things = collections.defaultdict(list)
+        extra_things[self.map_coords(pygame.mouse.get_pos())].append(self.mouse_cursor)
         for i in range(self.map_to_draw.w):
             for j in range(self.map_to_draw.h):
                 view_x =  32*i-32*j
@@ -59,8 +65,15 @@ class SDLMap(object):
                 s_pos = Rect(x-32,y+16-s.get_height(),s.get_width(),s.get_height())
                 if s_pos.collidelist(work_rects)>=0:
                     screen.blit(s, s_pos)
-
-
+                    if (i,j) in extra_things:
+                        for s in extra_things[(i,j)]:
+                            screen.blit(s,(x-32,y+16-s.get_height()))
+    def map_coords(self, xy):
+        x, y = xy
+        x, y = x + self.view_x, y + self.view_y
+        i = (x+2*y+32)//64
+        j = (2*y-x+32)//64
+        return (i,j)
 if __name__ == '__main__':
     import sys
     
