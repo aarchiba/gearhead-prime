@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#       
+#       Copyright 2012 Anne Archibald <peridot.faceted@gmail.com>
+#       
+#       This program is free software; you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation; either version 2 of the License, or
+#       (at your option) any later version.
+#       
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#       
+#       You should have received a copy of the GNU General Public License
+#       along with this program; if not, write to the Free Software
+#       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#       MA 02110-1301, USA.
+#       
+# 
+
+import yaml
+
+class PC(object):
+    def __init__(self):
+        import image
+        self.colors = image.random_color_scheme("personal")
+        print self.colors
+        self.sprites = [image.get("cha_f_mechanic.png", self.colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)]
+        self.orientation = 0
+        self.map = None
+        self.coords = (0,0)
+
+    def sprite(self):
+        return self.sprites[self.orientation]
+    
+        
+
+class Gameboard(yaml.YAMLObject):
+    yaml_tag = "!Gameboard"
+    
+    def __init__(self):
+        self.map = None
+        self.PC = None
+        self.messages = []
+        self.ui = None
+    
+    def post_message(self, message):
+        self.messages.append(message)
+        self.ui.post_message(message)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['ui']
+        return d
+    def __setstate__(self,d):
+        self.__dict__ = d
+        self.ui = None
+
+if __name__=='__main__':
+    pass

@@ -54,6 +54,8 @@ class SDLMap(object):
         if work_rects is None:
             work_rects = [Rect(0,0,screen.get_width(),screen.get_height())]
         extra_things = collections.defaultdict(list)
+        for o in self.map_to_draw.movable_objects:
+            extra_things[o.coords].append(o.sprite())
         extra_things[self.map_coords(pygame.mouse.get_pos())].append(self.mouse_cursor)
         for i in range(self.map_to_draw.w):
             for j in range(self.map_to_draw.h):
@@ -74,6 +76,7 @@ class SDLMap(object):
         i = (x+2*y+32)//64
         j = (2*y-x+32)//64
         return (i,j)
+
 if __name__ == '__main__':
     import sys
     

@@ -53,14 +53,11 @@ def get(name, recoloring = None, rect = None):
 
 def recolor(image, mode):
     if mode is None:
-        return image
-    elif mode[0]=="RYG":
-        return recolor_ryg(image, mode[1:])
-    else: 
-        raise ValueError("Unrecognized recoloring spec {}".format(mode))
-        
-def recolor_ryg(image, ryg):
-    red, yellow, green = (np.asarray(c,np.uint8) for c in ryg)
+        return
+    red = mode.get('red', (255,0,0))
+    yellow = mode.get('yellow', (255,255,0))
+    green = mode.get('green', (0,255,0))
+    red, yellow, green = (np.asarray(c,np.uint8) for c in (red, yellow, green))
     # We need to make a copy in this specific format
     image = image.convert_alpha(pygame.Surface((1,1), pygame.SRCALPHA, 32))
     # We can't make a new image from an array, so we're going to
@@ -122,23 +119,38 @@ def load_sdl_colors_txt(filename="data/sdl_colors.txt"):
                 mecha[i].append(name)
             else:
                 assert flags[i+3]=="-"
-                
+              
+class ColorScheme(dict):
+    def __init__(self, red=(255,0,0), green=(0,255,0), yellow=(255,255,0)):
+        dict.__init__(self, red=red, green=green, yellow=yellow)
+    def __hash__(self):
+        return hash(tuple(self.items()))
 def random_color_scheme(kind=None):
     if colors is None:
         load_sdl_colors_txt()
     if kind is None:
-        rs, gs, bs = colors, colors, colors
+        rs, ys, gs = colors, colors, colors
     elif kind == "mecha":
-        rs, gs, bs = mecha
+        rs, ys, gs = mecha
     elif kind == "personal":
-        rs, gs, bs = personal
+        rs, ys, gs = personal
     else:
-        r, g, b = kind # pass through
-        return r, g, b
-    return (colors[random.choice(rs)],
-            colors[random.choice(gs)],
-            colors[random.choice(bs)])
+        return kind
+    return ColorScheme(red=colors[random.choice(rs)],
+                        yellow=colors[random.choice(ys)],
+                        green=colors[random.choice(gs)])
 
+
+class MultiSpriteFile(object):
+    def __init__(self, filename, sprite_size):
+        self.filename = filename
+        self.sprite_size = sprite_size
+        
+    def get_rect(self, ij):
+        i, j = ij
+        w, h = self.sprite_size
+        return Rect(i*w, j*h, w, h)
+    
 
 if __name__ == '__main__':
     import sys

@@ -48,6 +48,7 @@ class Map(yaml.YAMLObject):
         self.seen = np.zeros(self.size, np.uint8)
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
+        self.movable_objects = []
 
     def add_terrain_type(self, t):
         self.terrain_types.append(t)
