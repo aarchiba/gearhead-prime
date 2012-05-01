@@ -54,6 +54,18 @@ class MapLayer(Layer):
             elif event.unicode == u'=':
                 self.ui.command_processor.issue(command.ActionSequence([action.Advance()]))
                 return True
+            elif event.key == pygame.K_UP:
+                self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 7))
+                return True
+            elif event.key == pygame.K_DOWN:
+                self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 3))
+                return True
+            elif event.key == pygame.K_RIGHT:
+                self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 1))
+                return True
+            elif event.key == pygame.K_LEFT:
+                self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 5))
+                return True
         return False
 
 

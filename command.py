@@ -21,6 +21,8 @@
 # 
 
 import collections
+
+import action
         
 class Command(object):
     """A command is something the player asks the game to do.
@@ -48,6 +50,12 @@ def ActionSequence(al):
     for a in al:
         yield a
                 
+@command_wrapper
+def TurnAndGo(PC, orientation):
+    while PC.orientation != orientation:
+        d = (4+orientation-PC.orientation) % 8 - 4
+        yield action.Turn(d>0)
+    yield action.Advance()
 
 class CommandProcessor(object):
     def __init__(self):
