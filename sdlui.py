@@ -26,6 +26,7 @@ import ui
 import game
 import map
 import sdlmap
+import command
 
 class Layer(object):
     def handle(self, event):
@@ -41,10 +42,10 @@ class MapLayer(Layer):
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
             if event.unicode == u'[':
-                self.ui.post_message('Turning left')
+                self.ui.command_processor.issue(command.ActionSequence([command.Turn(False)]))
                 return True
             if event.unicode == u']':
-                self.ui.post_message('Turning right')
+                self.ui.command_processor.issue(command.ActionSequence([command.Turn(True)]))
                 return True
         return False
 
@@ -80,6 +81,7 @@ class SDLUI(ui.UI):
                     for l in reversed(self.layers):
                         if l.handle(event):
                             break
+            self.act()
             self.draw()
             pygame.display.flip()
             self.frame_clock.tick(30)

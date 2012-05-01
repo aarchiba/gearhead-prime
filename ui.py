@@ -39,7 +39,7 @@ class UI(object):
     
     def act(self):
         try:
-            (self.command_processor.next_action())(self.gameboard)
+            (self.command_processor.next())(self.gameboard)
         except StopIteration:
             pass
         return self.command_processor.command_queue

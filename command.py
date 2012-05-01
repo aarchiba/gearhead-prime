@@ -35,7 +35,17 @@ class Action(object):
     """
     def __call__(self, gameboard):
         raise NotImplemented
-    
+
+class Turn(Action):
+    def __init__(self, right):
+        self.right = right
+    def __call__(self, gameboard):
+        if self.right:
+            gameboard.PC.orientation += 1
+        else:
+            gameboard.PC.orientation -= 1
+        gameboard.PC.orientation %= 8
+        
 class Command(object):
     """A command is something the player asks the game to do.
     
@@ -46,29 +56,39 @@ class Command(object):
     """
     pass
     
-class GoTo(Command):
-    def __init__(self, PC, xy):
-        pass
+def command_wrapper(gen):
+    class Generator(Command):
+        def __init__(self, *args, **kwargs):
+            self.gen = gen(*args, **kwargs)
         
+        def next(self):
+            return self.gen.next()
+    return Generator
+    
+@command_wrapper
+def ActionSequence(al):
+    for a in al:
+        yield a
+                
 
 class CommandProcessor(object):
     def __init__(self):
         self.command_queue = collections.deque()
         
     def issue(self, command):
-        command_queue.append(command)
+        self.command_queue.append(command)
         
     def next(self):
-        while command_queue:
+        while self.command_queue:
             try:
-                return command_queue[0].next()
+                return self.command_queue[0].next()
             except StopIteration:
-                command_queue.popleft()
+                self.command_queue.popleft()
         raise StopIteration
     
     def interrupt(self):
         self.command_queue = collections.deque()
-    
+
 
 if __name__=='__main__':
     pass
