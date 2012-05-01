@@ -20,7 +20,7 @@
 #       
 # 
 
-import map
+import gamemap
 
 class Action(object):
     """An action is a request for the game to do something atomic.
@@ -50,10 +50,10 @@ class Turn(Action):
 class Advance(Action):
     def __call__(self, gameboard):
         x, y = gameboard.PC.coords
-        delta_x, delta_y = map.deltas[gameboard.PC.orientation]
+        delta_x, delta_y = gamemap.deltas[gameboard.PC.orientation]
         to_x, to_y = x+delta_x, y+delta_y
         # FIXME: figure out how to report failure
-        if gameboard.map.terrain((to_x,to_y)).passable:
+        if gameboard.gamemap.terrain((to_x,to_y)).passable:
             gameboard.PC.coords = to_x, to_y
         else:
             gameboard.post_message("Cannot move forward: blocked by terrain")

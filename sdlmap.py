@@ -25,7 +25,7 @@ import collections
 import pygame
 from pygame import Rect
 
-import map
+import gamemap
 import image
 
 class SDLMap(object):
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
 
     clock = pygame.time.Clock()
-    S = SDLMap(map.load_ascii_map("data/testmap1.txt"))
+    S = SDLMap(gamemap.load_ascii_map("data/testmap1.txt"))
 
     while True:
         for event in pygame.event.get():

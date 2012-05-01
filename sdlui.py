@@ -24,7 +24,7 @@ import pygame
 
 import ui
 import game
-import map
+import gamemap
 import sdlmap
 import command
 import action
@@ -34,10 +34,10 @@ class Layer(object):
         return False
     
 class MapLayer(Layer):
-    def __init__(self, map, ui):
+    def __init__(self, gamemap, ui):
         self.ui = ui
-        self.map = map
-        self.sdlmap = sdlmap.SDLMap(map)
+        self.gamemap = gamemap
+        self.sdlmap = sdlmap.SDLMap(gamemap)
     def draw(self, screen):
         i, j = self.ui.gameboard.PC.coords
         self.sdlmap.view_x = 32*i-32*j
@@ -69,13 +69,13 @@ class SDLUI(ui.UI):
     
     def new_game(self):
         gb = game.Gameboard()
-        gb.map = map.load_ascii_map("data/testmap1.txt")
+        gb.gamemap = gamemap.load_ascii_map("data/testmap1.txt")
         gb.PC = game.PC()
         gb.PC.coords = (10,5)
-        gb.map.movable_objects.append(gb.PC)
+        gb.gamemap.movable_objects.append(gb.PC)
         ui.UI.new_game(self, gb)
         
-        self.layers = [MapLayer(gb.map, self)]
+        self.layers = [MapLayer(gb.gamemap, self)]
         
     def event_loop(self):
         while True:

@@ -41,7 +41,7 @@ class Gameboard(yaml.YAMLObject):
     yaml_tag = "!Gameboard"
     
     def __init__(self):
-        self.map = None
+        self.gamemap = None
         self.PC = None
         self.messages = []
         self.ui = None
