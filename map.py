@@ -38,6 +38,8 @@ def unicode_usable(c):
     return True
 usable_unicode_chars = [unichr(i) for i in range(65536) if unicode_usable(unichr(i))]
 
+deltas = [(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1),(0,-1)]
+
 class Map(yaml.YAMLObject):
     yaml_tag = "!Map"
     

@@ -44,8 +44,11 @@ class MapLayer(Layer):
             if event.unicode == u'[':
                 self.ui.command_processor.issue(command.ActionSequence([command.Turn(False)]))
                 return True
-            if event.unicode == u']':
+            elif event.unicode == u']':
                 self.ui.command_processor.issue(command.ActionSequence([command.Turn(True)]))
+                return True
+            elif event.unicode == u'=':
+                self.ui.command_processor.issue(command.ActionSequence([command.Advance()]))
                 return True
         return False
 

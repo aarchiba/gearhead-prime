@@ -21,6 +21,7 @@
 # 
 
 import collections
+import map
 
 class Action(object):
     """An action is a request for the game to do something atomic.
@@ -45,6 +46,13 @@ class Turn(Action):
         else:
             gameboard.PC.orientation -= 1
         gameboard.PC.orientation %= 8
+class Advance(Action):
+    def __call__(self, gameboard):
+        x, y = gameboard.PC.coords
+        delta_x, delta_y = map.deltas[gameboard.PC.orientation]
+        to_x, to_y = x+delta_x, y+delta_y
+        # FIXME: check the way isn't obstructed
+        gameboard.PC.coords = to_x, to_y
         
 class Command(object):
     """A command is something the player asks the game to do.
