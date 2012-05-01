@@ -21,38 +21,6 @@
 # 
 
 import collections
-import map
-
-class Action(object):
-    """An action is a request for the game to do something atomic.
-    
-    This may be "turn left", "swing my sword at this monster", or
-    "try picking this lock". It takes a certain amount of time and/or
-    resources, and it cannot be interrupted.
-    
-    Often actions are too fine-grained for convenient use by the player,
-    who instead issues higher-level commands, which yield a sequence
-    of actions. 
-    """
-    def __call__(self, gameboard):
-        raise NotImplemented
-
-class Turn(Action):
-    def __init__(self, right):
-        self.right = right
-    def __call__(self, gameboard):
-        if self.right:
-            gameboard.PC.orientation += 1
-        else:
-            gameboard.PC.orientation -= 1
-        gameboard.PC.orientation %= 8
-class Advance(Action):
-    def __call__(self, gameboard):
-        x, y = gameboard.PC.coords
-        delta_x, delta_y = map.deltas[gameboard.PC.orientation]
-        to_x, to_y = x+delta_x, y+delta_y
-        # FIXME: check the way isn't obstructed
-        gameboard.PC.coords = to_x, to_y
         
 class Command(object):
     """A command is something the player asks the game to do.
@@ -60,7 +28,9 @@ class Command(object):
     This may be "go to (x,y)", "repair this object" or simply "walk
     forward". This may involve multiple actions, and may need to be
     interrupted (say if the player rounds a corner and notices 
-    a monster).
+    a monster). On the other hand, the processing of a command
+    is more or less unrestricted by game rules, since each action
+    includes its own accounting/error checking rules.
     """
     pass
     

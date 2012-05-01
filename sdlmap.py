@@ -56,12 +56,12 @@ class SDLMap(object):
         extra_things = collections.defaultdict(list)
         for o in self.map_to_draw.movable_objects:
             extra_things[o.coords].append(o.sprite())
-        extra_things[self.map_coords(pygame.mouse.get_pos())].append(self.mouse_cursor)
+        extra_things[self.map_coords(pygame.mouse.get_pos(), screen)].append(self.mouse_cursor)
         for i in range(self.map_to_draw.w):
             for j in range(self.map_to_draw.h):
                 view_x =  32*i-32*j
                 view_y =  16*i+16*j
-                x, y = view_x - self.view_x, view_y-self.view_y
+                x, y = view_x - self.view_x + screen.get_width()//2, view_y-self.view_y + screen.get_height()//2
                 t = self.map_to_draw.terrain((i,j))
                 s = t.sprite()
                 s_pos = Rect(x-32,y+16-s.get_height(),s.get_width(),s.get_height())
@@ -70,9 +70,9 @@ class SDLMap(object):
                     if (i,j) in extra_things:
                         for s in extra_things[(i,j)]:
                             screen.blit(s,(x-32,y+16-s.get_height()))
-    def map_coords(self, xy):
+    def map_coords(self, xy, screen):
         x, y = xy
-        x, y = x + self.view_x, y + self.view_y
+        x, y = x + self.view_x-screen.get_width()//2, y + self.view_y-screen.get_height()//2
         i = (x+2*y+32)//64
         j = (2*y-x+32)//64
         return (i,j)

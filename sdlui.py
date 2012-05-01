@@ -27,6 +27,7 @@ import game
 import map
 import sdlmap
 import command
+import action
 
 class Layer(object):
     def handle(self, event):
@@ -38,17 +39,20 @@ class MapLayer(Layer):
         self.map = map
         self.sdlmap = sdlmap.SDLMap(map)
     def draw(self, screen):
+        i, j = self.ui.gameboard.PC.coords
+        self.sdlmap.view_x = 32*i-32*j
+        self.sdlmap.view_y = 16*i+16*j
         self.sdlmap.draw(screen)
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
             if event.unicode == u'[':
-                self.ui.command_processor.issue(command.ActionSequence([command.Turn(False)]))
+                self.ui.command_processor.issue(command.ActionSequence([action.Turn(False)]))
                 return True
             elif event.unicode == u']':
-                self.ui.command_processor.issue(command.ActionSequence([command.Turn(True)]))
+                self.ui.command_processor.issue(command.ActionSequence([action.Turn(True)]))
                 return True
             elif event.unicode == u'=':
-                self.ui.command_processor.issue(command.ActionSequence([command.Advance()]))
+                self.ui.command_processor.issue(command.ActionSequence([action.Advance()]))
                 return True
         return False
 

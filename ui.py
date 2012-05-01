@@ -31,9 +31,11 @@ class UI(object):
         self.save_name = "ghsave.yaml"
         
     def new_game(self, gameboard):
-        self.gameboard = gameboard        
+        self.gameboard = gameboard
+        gameboard.ui = self        
     def load_game(self):
         self.gameboard = yaml.load(open(self.save_name, 'rt'))
+        gameboard.ui = self        
     def save_game(self):
         yaml.dump(self.gameboard, open(self.save_name, 'wt'))
     

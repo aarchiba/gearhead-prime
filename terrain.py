@@ -50,9 +50,9 @@ class Terrain(yaml.YAMLObject):
         self.__dict__ = d
         self._sprite = None
         
-void = Terrain("void", " ", ("big_terrain.png", None, (576,0,64,96)))
+void = Terrain("void", " ", ("big_terrain.png", None, (576,0,64,96)), passable=False)
 floor = Terrain("floor", ".", ("big_terrain.png", None, (576,96,64,96)))
-wall = Terrain("wall", "#", ("big_terrain.png", None, (448,288,64,96)))
+wall = Terrain("wall", "#", ("big_terrain.png", None, (448,288,64,96)), passable=False)
 
 
 if __name__=='__main__':
