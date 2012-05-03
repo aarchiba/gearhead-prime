@@ -21,10 +21,12 @@
 #       
 
 import unicodedata
+import collections
 
 import numpy as np
 
 import yaml
+import fov
 import terrain
 
 def unicode_usable(c):
@@ -108,6 +110,20 @@ class Map(yaml.YAMLObject):
             for i,c in enumerate(l):
                 if c!='.':
                     self.seen[i,j] = 1
+                    
+    def look(self, char):
+        """List everything the character can see from its current position"""
+        mo = collections.defaultdict(list)
+        for o in self.movable_objects:
+            mo[o.coords].append(o)
+        r = []
+        def see(x,y):
+            r.append(((x,y), self.terrain((x,y))))
+            for m in mo[(x,y)]:
+                r.append(((x,y),m))
+        fov.fieldOfView(char.coords[0], char.coords[1], self.w, self.h, self.w+self.h,
+            see, lambda x,y: self.terrain((x,y)).opaque)
+        return r
 
 def load_ascii_map(f):
     a = open(f,"rt").readlines()
@@ -133,6 +149,8 @@ def load_ascii_map(f):
 
 def find_path(the_map, origin, dest):
     pass
+
+
 
 
 if __name__ == '__main__':

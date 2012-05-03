@@ -34,11 +34,13 @@ class Layer(object):
         return False
     
 class MapLayer(Layer):
-    def __init__(self, gamemap, ui):
+    def __init__(self, remembered_map, gamemap, ui):
         self.ui = ui
+        self.remembered_map = remembered_map
         self.gamemap = gamemap
-        self.sdlmap = sdlmap.SDLMap(gamemap)
+        self.sdlmap = sdlmap.SDLMap(remembered_map)
     def draw(self, screen):
+        self.sdlmap.see(self.gamemap.look(self.ui.gameboard.PC))
         i, j = self.ui.gameboard.PC.coords
         self.sdlmap.view_x = 32*i-32*j
         self.sdlmap.view_y = 16*i+16*j
@@ -87,7 +89,7 @@ class SDLUI(ui.UI):
         gb.gamemap.movable_objects.append(gb.PC)
         ui.UI.new_game(self, gb)
         
-        self.layers = [MapLayer(gb.gamemap, self)]
+        self.layers = [MapLayer(gamemap.Map(gb.gamemap.size), gb.gamemap, self)]
         
     def event_loop(self):
         while True:

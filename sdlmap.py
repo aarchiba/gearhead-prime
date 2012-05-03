@@ -27,6 +27,8 @@ from pygame import Rect
 
 import gamemap
 import image
+import terrain
+
 
 class SDLMap(object):
     """Graphical representation of a particular map
@@ -76,6 +78,16 @@ class SDLMap(object):
         i = (x+2*y+32)//64
         j = (2*y-x+32)//64
         return (i,j)
+    def see(self, things):
+        for coords, obj in things:
+            if isinstance(obj, terrain.Terrain):
+                self.map_to_draw.set_terrain(coords, obj)
+            else:
+                try:
+                    self.map_to_draw.movable_objects.remove(obj)
+                except ValueError:
+                    pass
+                self.map_to_draw.movable_objects.append(obj)
 
 if __name__ == '__main__':
     import sys
@@ -85,7 +97,8 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
 
     clock = pygame.time.Clock()
-    S = SDLMap(gamemap.load_ascii_map("data/testmap1.txt"))
+    M = gamemap.load_ascii_map("data/testmap1.txt")
+    S = SDLMap(M,M)
 
     while True:
         for event in pygame.event.get():

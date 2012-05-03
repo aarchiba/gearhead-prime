@@ -52,7 +52,7 @@ class Terrain(yaml.YAMLObject):
         
 void = Terrain("void", " ", ("big_terrain.png", None, (576,0,64,96)), passable=False)
 floor = Terrain("floor", ".", ("big_terrain.png", None, (576,96,64,96)))
-wall = Terrain("wall", "#", ("big_terrain.png", None, (448,288,64,96)), passable=False)
+wall = Terrain("wall", "#", ("big_terrain.png", None, (448,288,64,96)), passable=False, opaque=True)
 
 
 if __name__=='__main__':
