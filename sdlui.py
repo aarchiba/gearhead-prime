@@ -39,7 +39,9 @@ class MapLayer(Layer):
         self.remembered_map = remembered_map
         self.gamemap = gamemap
         self.sdlmap = sdlmap.SDLMap(remembered_map)
+        self.screen = None
     def draw(self, screen):
+        self.screen = screen
         self.sdlmap.see(self.gamemap.look(self.ui.gameboard.PC))
         i, j = self.ui.gameboard.PC.coords
         self.sdlmap.view_x = 32*i-32*j
@@ -68,6 +70,10 @@ class MapLayer(Layer):
             elif event.key == pygame.K_LEFT:
                 self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 5))
                 return True
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            click_pos = self.sdlmap.map_coords(event.pos, self.screen)
+            self.ui.click(click_pos)
+        
         return False
 
 

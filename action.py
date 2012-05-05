@@ -50,7 +50,7 @@ class Turn(Action):
 class Advance(Action):
     def __call__(self, gameboard):
         x, y = gameboard.PC.coords
-        delta_x, delta_y = gamemap.deltas[gameboard.PC.orientation]
+        delta_x, delta_y = gamemap.orientation_to_delta[gameboard.PC.orientation]
         to_x, to_y = x+delta_x, y+delta_y
         # FIXME: figure out how to report failure
         if gameboard.gamemap.terrain((to_x,to_y)).passable:

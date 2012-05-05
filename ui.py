@@ -50,6 +50,9 @@ class UI(object):
         self.logfile.write(message)
         print message
         
+    def click(self, coords):
+        self.command_processor.issue(command.GoTo(self.gameboard.PC, self.gameboard.gamemap, coords))
+
     def display_messages(self):
         raise NotImplemented
     def browse_characters(self):

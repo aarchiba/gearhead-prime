@@ -22,6 +22,7 @@
 
 import unicodedata
 import collections
+import heapq
 
 import numpy as np
 
@@ -40,7 +41,6 @@ def unicode_usable(c):
     return True
 usable_unicode_chars = [unichr(i) for i in range(65536) if unicode_usable(unichr(i))]
 
-deltas = [(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1),(0,-1)]
 
 class Map(yaml.YAMLObject):
     yaml_tag = "!Map"
@@ -147,9 +147,82 @@ def load_ascii_map(f):
     return M
 
 
-def find_path(the_map, origin, dest):
-    pass
 
+orientation_to_delta = [(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1),(0,-1)]
+delta_to_orientation = dict([(o, i) for (i,o) in enumerate(orientation_to_delta)])
+
+# FIXME: wrong if more than one step away
+def find_orientation(from_, to):
+    x1, y1 = from_
+    x2, y2 = to
+    return delta_to_orientation[x2-x1,y2-y1]
+
+
+def adjacent(pos1, pos2):
+    x1, y1 = pos1
+    x2, y2 = pos2
+    return (not pos1==pos2) and abs(x1-x2)<=1 and abs(y1-y2)<=1
+
+
+
+
+
+
+
+
+class NoPathException(ValueError):
+    def __init__(self, best_effort=None):
+        ValueError.__init__(self, "Path not found")
+        self.best_effort=best_effort
+
+root2 = np.sqrt(2)
+def find_path(x1y1,x2y2,passable):
+
+    def dist(x1y1, x2y2):
+        x1,y1 = x1y1
+        x2,y2 = x2y2
+        return np.hypot(x1-x2,y1-y2)
+
+    path_to = {x1y1: ((x1y1,),0)}
+    costs = [(dist(x1y1,x2y2), x1y1)]
+
+    closest = np.inf, None
+
+    while costs:
+        d, node = heapq.heappop(costs)
+        if node == x2y2:
+            return path_to[x2y2]
+
+        dd = dist(node,x2y2)
+        if dd < closest[0]:
+            closest = dd, node
+
+        path_so_far, l_so_far = path_to[node]
+
+        nx, ny = node
+        for i in (-1,0,1): # FIXME: randomize selection of directions
+            for j in (-1,0,1):
+                nbx, nby = nx+i, ny+j
+                if not passable(nbx,nby):
+                    continue
+                l = l_so_far + np.hypot(i,j)
+                if (nbx,nby) in path_to:
+                    pp, ll = path_to[nbx,nby]
+                    if ll<=l:
+                        continue
+                    # new shortest path to this node
+                    # so remove it from the queue (if it's there)
+                    # and fall through to the "new node" code
+                    costs = [(d,n) for (d,n) in costs if n!=(nbx,nby)]
+                # this is the shortest known path to (nbx,nby)
+                path_to[nbx,nby] = path_so_far + ((nbx,nby),), l
+
+                # How promising is it?
+                cost = l+dist((nbx,nby),x1y1)
+
+                heapq.heappush(costs, (cost,(nbx,nby)))
+
+    raise NoPathException(path_to[closest[1]])
 
 
 

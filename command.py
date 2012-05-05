@@ -23,6 +23,7 @@
 import collections
 
 import action
+import gamemap
         
 class Command(object):
     """A command is something the player asks the game to do.
@@ -57,6 +58,24 @@ def TurnAndGo(PC, orientation):
         yield action.Turn(d>0)
     yield action.Advance()
 
+@command_wrapper
+def GoTo(PC,current_map,coords):
+    while True:
+        try:
+            p, d = gamemap.find_path(PC.coords, coords, lambda x,y: current_map.terrain((x,y)).passable)
+        except gamemap.NoPathException, e:
+            p, d = e.best_effort
+        if len(p)>1:
+            c, n = p[:2]
+            o = gamemap.find_orientation(c,n)
+            if o != PC.orientation: 
+                d = (4+o-PC.orientation) % 8 - 4
+                yield action.Turn(d>0)
+            else:
+                yield action.Advance()
+        else:
+            break
+    
 class CommandProcessor(object):
     def __init__(self):
         self.command_queue = collections.deque()
