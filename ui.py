@@ -41,6 +41,8 @@ class UI(object):
     
     def act(self):
         try:
+            # FIXME: if it's an action, do it
+            # but if it's a command, put it on the front of the list
             (self.command_processor.next())(self.gameboard)
         except StopIteration:
             pass

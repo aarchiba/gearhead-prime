@@ -21,6 +21,7 @@
 # 
 
 import pygame
+from pygame import Rect
 
 import ui
 import game
@@ -32,7 +33,38 @@ import action
 class Layer(object):
     def handle(self, event):
         return False
-    
+
+def render_text(font, text, width):
+    imgs = [ font.render(l, True, (255,255,255)) for l in text.split("\n")]
+    h = sum(i.get_height() for i in imgs)
+    s = pygame.surface.Surface((width,h))
+    o = 0
+    for i in imgs:
+        s.blit(i,(0,o))
+        o += i.get_height()        
+    return s
+
+class HUDLayer(Layer):
+    def __init__(self, gameboard, ui):
+        self.gameboard = gameboard
+        self.ui = ui
+        self.w = 600
+        self.h = 100
+        self.font =  pygame.font.Font(None, 24)
+
+    def draw(self, screen):
+        w, h = screen.get_size()
+        r = Rect((w-self.w)//2, h-self.h, self.w, self.h)
+        screen.fill((0,0,0), r)
+        o = 0
+        for m in reversed(self.gameboard.messages):
+            s = render_text(self.font, m, self.w)
+            o += s.get_height()
+            screen.blit(s, ((w-self.w)//2,h-o))
+            if o>self.h:
+                break
+                
+        
 class MapLayer(Layer):
     def __init__(self, remembered_map, gamemap, ui):
         self.ui = ui
@@ -72,6 +104,7 @@ class MapLayer(Layer):
                 return True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             click_pos = self.sdlmap.map_coords(event.pos, self.screen)
+            self.ui.gameboard.post_message("Going to ({},{})".format(*click_pos))
             self.ui.click(click_pos)
         
         return False
@@ -95,7 +128,7 @@ class SDLUI(ui.UI):
         gb.gamemap.movable_objects.append(gb.PC)
         ui.UI.new_game(self, gb)
         
-        self.layers = [MapLayer(gamemap.Map(gb.gamemap.size), gb.gamemap, self)]
+        self.layers = [MapLayer(gamemap.Map(gb.gamemap.size), gb.gamemap, self), HUDLayer(gb,self)]
         
     def event_loop(self):
         while True:

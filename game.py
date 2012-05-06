@@ -43,7 +43,7 @@ class Gameboard(yaml.YAMLObject):
     def __init__(self):
         self.gamemap = None
         self.PC = None
-        self.messages = []
+        self.messages = ["New game"]
         self.ui = None
     
     def post_message(self, message):
