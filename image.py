@@ -32,7 +32,7 @@ import lru
 
 # Cache of recolored images: keep them around as long as they're in use
 _images = weakref.WeakValueDictionary()
-_image_dir = "images"
+_image_dir = os.path.join(os.path.dirname(__file__), "images")
 # Use LRU to make sure the weakref deletion isn't too aggressive
 @lru.cache()
 def get(name, recoloring = None, rect = None):
@@ -86,7 +86,7 @@ def recolor(image, mode):
     return image
 
 colors = None
-def load_sdl_colors_txt(filename="data/sdl_colors.txt"):
+def load_sdl_colors_txt(filename=os.path.join(os.path.dirname(__file__),"data/sdl_colors.txt")):
     global colors, personal, mecha
 
     if colors is not None:
