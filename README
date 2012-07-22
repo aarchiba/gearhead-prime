@@ -1,0 +1,59 @@
+Gearhead Prime
+==============
+ 
+The giant robot roguelike GearHead, by Joseph Hewitt, has a sequel 
+currently under development. There are several branches of 
+development, actually; there is the original sequel GearHead 2, 
+which is playable though unfinished, and there is GearHead Arena-R, 
+a technology testing ground that is evaluating the use of Lua by 
+trying to port the content from the original GearHead to a new 
+engine. Both these sequels are still based on Pascal, which is 
+something of a barrier to many contributors. So this project, 
+Gearhead Prime, is an attempt to write a game engine in Python for 
+use in a GearHead sequel.
+
+Just to be clear: this is not yet a playable game.
+
+Author
+------
+
+At the moment, Gearhead Prime is written primarily by 
+Anne Archibald <peridot.faceted@gmail.com>
+but it is based in spirit and to some degree in detail on the
+original Gearhead, which was by Joseph Hewitt. Please focus bug
+reports and complaints on Anne, since Joseph is not responsible
+for any problems in this code.
+
+License
+-------
+
+Gearhead Prime is made available under the same LGPL as the original
+Gearhead.
+
+Portability
+-----------
+
+Gearhead Prime has not been tested on non-Linux systems, but it is
+intended to work there.
+
+Dependencies
+------------
+
+This project currently depends on just a few pieces of software:
+
+* A python 2 installation
+* pygame
+* numpy
+
+All are readily available as packages under Ubuntu Linux, and probably
+every other major Linux distribution. Probably Macs and Windows too, 
+I don't know.
+
+Inclusions
+----------
+
+Gearhead Prime includes a certain amount of code from other sources.
+In particular, it includes a permissive field-of-view algorithm from
+roguebasin, and it includes a modified copy of the python "yaml"
+package for XML-based serialization of python objects. It also includes
+images from the original Gearhead.
