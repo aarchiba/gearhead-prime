@@ -106,7 +106,7 @@ class MapLayer(Layer):
                 return True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             click_pos = self.sdlmap.map_coords(event.pos, self.screen)
-            self.ui.gameboard.post_message("Going to ({},{})".format(*click_pos))
+            self.ui.gameboard.post_message("Going to (%d,%d)" % click_pos)
             self.ui.click(click_pos)
         
         return False
