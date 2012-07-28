@@ -1,0 +1,11 @@
+#a gitignore file for gearhead-prime
+
+#runtime message log
+messages.txt
+
+#compiled python files
+*.pyc
+
+#text editor/other swapfiles
+*.swp
+

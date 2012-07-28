@@ -22,6 +22,7 @@
 
 import yaml
 import command
+from action import ActionFailure
 
 class UI(object):
     def __init__(self):
@@ -46,6 +47,12 @@ class UI(object):
             (self.command_processor.next())(self.gameboard)
         except StopIteration:
             pass
+        except ActionFailure, e:
+			#FIXME: ActionFailure should probably be handled somewhere
+			# other than in a 'ui' module
+            self.gameboard.post_message("ActionFailure: %s" % str(e))
+			
+			
         return self.command_processor.command_queue
         
     def post_message(self, message):

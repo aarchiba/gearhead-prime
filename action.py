@@ -22,6 +22,11 @@
 
 import gamemap
 
+class ActionFailure(Exception):
+	"""Action.__call__ can raise this whenever the action fails for
+	any reason."""
+	pass
+
 class Action(object):
     """An action is a request for the game to do something atomic.
     
@@ -47,16 +52,18 @@ class Turn(Action):
         else:
             gameboard.PC.orientation -= 1
         gameboard.PC.orientation %= 8
+
 class Advance(Action):
     def __call__(self, gameboard):
         x, y = gameboard.PC.coords
         delta_x, delta_y = gamemap.orientation_to_delta[gameboard.PC.orientation]
         to_x, to_y = x+delta_x, y+delta_y
-        # FIXME: figure out how to report failure
         if gameboard.gamemap.terrain((to_x,to_y)).passable:
             gameboard.PC.coords = to_x, to_y
         else:
-            gameboard.post_message("Cannot move forward: blocked by terrain")
+            raise ActionFailure, "Cannot advance into (%i,%i): blocked by terrain"\
+                % (to_x, to_y)
+        #    gameboard.post_message("Cannot move forward: blocked by terrain")
 
 
 
