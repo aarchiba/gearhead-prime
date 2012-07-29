@@ -54,6 +54,21 @@ void = Terrain("void", " ", ("big_terrain.png", None, (576,0,64,96)), passable=F
 floor = Terrain("floor", ".", ("big_terrain.png", None, (576,96,64,96)))
 wall = Terrain("wall", "#", ("big_terrain.png", None, (448,288,64,96)), passable=False, opaque=True)
 
+#some default thinwalls
+twfile = "SharkD_Wall_FlatTechy_b_sheet_a.png"
+twls = {}
+#ThinWall, Corner: Right and Down
+twls[u'┌'] = Terrain("tw-crd", u"┌", (twfile, None, (0,288,64,96)), passable=False)
+twls[u'┐'] = Terrain("tw-cld", u"┐", (twfile, None, (64,192,64,96)), passable=False)
+twls[u'└'] = Terrain("tw-cru", u"└", (twfile, None, (64*2,96,64,96)), passable=False)
+twls[u'┘'] = Terrain("tw-clu", u"┘", (twfile, None, (64*3,0,64,96)), passable=False)
+twls[u'─'] = Terrain("tw-h",   u"─", (twfile, None, (64,96,64,96)), passable=False)
+twls[u'│'] = Terrain("tw-v",   u"│", (twfile, None, (64*2,96*2,64,96)), passable=False)
+twls[u'┬'] = Terrain("tw-jd",  u"┬", (twfile, None, (64, 96*3, 64,96)), passable=False)
+twls[u'┴'] = Terrain("tw-ju",  u"┴", (twfile, None, (64*3, 96, 64,96)), passable=False)
+twls[u'├'] = Terrain("tw-jr",  u"├", (twfile, None, (64*2, 96*3, 64,96)), passable=False)
+twls[u'┤'] = Terrain("tw-jl",  u"┤", (twfile, None, (64*3, 96*2, 64,96)), passable=False)
+twls[u'┼'] = Terrain("tw-jx",  u"┼", (twfile, None, (64*3, 96*3, 64,96)), passable=False)
 
 if __name__=='__main__':
     pass

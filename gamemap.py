@@ -25,6 +25,7 @@ import collections
 import heapq
 
 import numpy as np
+import random
 
 import yaml
 import fov
@@ -126,7 +127,8 @@ class Map(yaml.YAMLObject):
         return r
 
 def load_ascii_map(f):
-    a = open(f,"rt").readlines()
+    a = [line.decode('UTF-8') for line in open(f,"rt").readlines()]
+    #FIXME? detect file encoding automatically
     for i, l in enumerate(a):
         if l[-1] == "\n":
             a[i] = l[:-1]
@@ -141,6 +143,10 @@ def load_ascii_map(f):
                 c = terrain.wall
             elif c==".":
                 c = terrain.floor
+
+            elif c in terrain.twls:
+                c = terrain.twls[c]
+
             else:
                 c = terrain.void
             M.set_terrain((i,j),c)
@@ -152,6 +158,8 @@ orientation_to_delta = [(1,-1),(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1),(0,-1)]
 delta_to_orientation = dict([(o, i) for (i,o) in enumerate(orientation_to_delta)])
 
 # FIXME: wrong if more than one step away
+# possible solution: normalize the vector and then round
+# its coordinates to the closest integer
 def find_orientation(from_, to):
     x1, y1 = from_
     x2, y2 = to
@@ -200,8 +208,9 @@ def find_path(x1y1,x2y2,passable):
         path_so_far, l_so_far = path_to[node]
 
         nx, ny = node
-        for i in (-1,0,1): # FIXME: randomize selection of directions
-            for j in (-1,0,1):
+        #FIXME: random.sample here doesn't seem to make pathfinding moar random
+        for i in random.sample((-1,0,1), 3):
+            for j in random.sample((-1,0,1), 3):
                 nbx, nby = nx+i, ny+j
                 if not passable(nbx,nby):
                     continue

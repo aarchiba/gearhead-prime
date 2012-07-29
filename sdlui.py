@@ -124,7 +124,7 @@ class SDLUI(ui.UI):
     
     def new_game(self):
         gb = game.Gameboard()
-        gb.gamemap = gamemap.load_ascii_map(os.path.join(os.path.dirname(__file__),"data/testmap1.txt"))
+        gb.gamemap = gamemap.load_ascii_map(os.path.join(os.path.dirname(__file__),"data/testmap2.txt"))
         gb.PC = game.PC()
         gb.PC.coords = (10,5)
         gb.gamemap.movable_objects.append(gb.PC)

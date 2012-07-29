@@ -44,7 +44,7 @@ class Action(object):
         raise NotImplemented
 
 class Turn(Action):
-    def __init__(self, right):
+    def __init__(self, right): #FIXME: does 'right' mean clockwise?
         self.right = right
     def __call__(self, gameboard):
         if self.right:
