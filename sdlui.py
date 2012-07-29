@@ -24,6 +24,7 @@ import os
 
 import pygame
 from pygame import Rect
+from pygame.locals import *  #<- is this a good idea?
 
 import ui
 import game
@@ -104,6 +105,14 @@ class MapLayer(Layer):
             elif event.key == pygame.K_LEFT:
                 self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 5))
                 return True
+
+            #numpad keys:
+            kptodelta = {K_KP1:(0,1), K_KP2:(1,1), K_KP3:(1,0), K_KP4:(-1,1),
+                    K_KP6:(1,-1), K_KP7:(-1,0), K_KP8:(-1,-1), K_KP9:(0,-1)}
+            if event.key in kptodelta.keys():
+                direction = gamemap.delta_to_orientation[kptodelta[event.key]]
+                self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, direction))
+
         elif event.type == pygame.MOUSEBUTTONDOWN:
             click_pos = self.sdlmap.map_coords(event.pos, self.screen)
             self.ui.gameboard.post_message("Going to (%d,%d)" % click_pos)
