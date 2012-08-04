@@ -49,69 +49,110 @@ class Map(yaml.YAMLObject):
     def __init__(self, size):
         self.size = size
         self.w, self.h = self.size
-        self.map = np.zeros(self.size, np.uint8)
+        self.terrain = np.zeros(self.size, np.uint8)
         self.seen = np.zeros(self.size, np.uint8)
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
-        self.movable_objects = []
+        self.objects = []
+
+    def build_reverse_objects(self):
+        ro = collections.defaultdict(list)
+        for (x,y),o in self.objects:
+            ro[x,y].append(o)
+        return ro
 
     def add_terrain_type(self, t):
         self.terrain_types.append(t)
         self.terrain_types_reverse[t] = len(self.terrain_types)-1
         if len(self.terrain_types) == 256:
-            self.map = self.map.astype(np.uint16)
+            self.terrain = self.terrain.astype(np.uint16)
         elif len(self.terrain_types) == 65536:
-            self.map = self.map.astype(np.uint32)
+            self.terrain = self.terrain.astype(np.uint32)
                 
     def terrain(self, xy):
-        return self.terrain_types[self.map[xy]]
+        return self.terrain_types[self.terrain[xy]]
         
     def set_terrain(self, xy, t):
         if t not in self.terrain_types_reverse:
             self.add_terrain_type(t)
-        self.map[xy] = self.terrain_types_reverse[t]
+        self.terrain[xy] = self.terrain_types_reverse[t]
     
     def __str__(self):
         return ("Map {0} by {1}:\n".format(self.w, self.h) + 
             "\n".join("".join(self.terrain_types[v].roguechar for v in l) 
-                        for l in self.map.T))
+                        for l in self.terrain.T))
     def __getstate__(self):
         d = self.__dict__.copy()
+        del d['terrain']
         del d['terrain_types_reverse']
+        del d['terrain_types']
         del d['size']
-        ttmap = {}
-        ttchar = [' ']
-        j = 0
-        for t in self.terrain_types[1:]:
-            c = t.roguechar
-            while c in ttmap:
-                c = usable_unicode[j]
-                j += 1
-            ttmap[c] = t
-            ttchar.append(c)
-        d['map'] = '\n'.join("".join(ttchar[self.map[i,j]] for i in range(self.w)) for j in range(self.h))+"\n"
-        d['seen'] = '\n'.join("".join('*' if self.seen[i,j] else '.' for i in range(self.w)) for j in range(self.h))+"\n"
-        d['terrain_types'] = ttmap
-        return d
+        del d['w']
+        del d['h']
+        del d['objects']
+        cells = np.zeros_like(self.terrain)
+        cell_types = { (self.terrain_types[0], ()): 0 }
+        cell_chars = [' ']
+        n_cell_types = 1
+        unicode_used = 0
+        ro = self.build_reverse_objects()
+        for i in range(self.w):
+            for j in range(self.h):
+                terrain_ = self.terrain_types[self.terrain[i,j]]
+                contents = tuple(ro[i,j])
+                if (terrain_,contents) not in cell_types:
+                    cell_types[terrain_,contents] = n_cell_types
+                    n_cell_types += 1
+                    # choose a Unicode character
+                    # FIXME: pick a better default when c not empty
+                    ch = terrain_.roguechar
+                    while ch in cell_chars:
+                        ch = unicode_usable[unicode_used]
+                        unicode_used += 1
+                    cell_chars.append(ch)
+                cells[i,j] = cell_types[terrain_,contents]
 
+        d['map'] = '\n'.join("".join(cell_chars[cells[i,j]] for i in range(self.w)) for j in range(self.h))+"\n"
+        if np.any(self.seen):
+            d['seen'] = '\n'.join("".join('*' if self.seen[i,j] else '.' for i in range(self.w)) for j in range(self.h))+"\n"
+        else:
+            del d['seen']
+        d['cell_types'] = {}
+        for (k,v) in cell_types.items():
+            terrain_, contents = k
+            d['cell_types'][cell_chars[v]] = [terrain_]+list(contents)
+        return d
     def __setstate__(self, d):
+        cell_types = d.pop('cell_types')
+        cell_map = d.pop('map')
+        seen = d.pop('seen',None)
+
         self.__dict__ = d
+        
+        self.h = len(cell_map.split("\n"))
+        self.w = 0
+        for l in cell_map.split("\n"):
+            self.w = max(len(l),self.w)
+ 
         self.size = (self.w, self.h)
-        ttmap = self.terrain_types
-        map = self.map
-        seen = self.seen
-        self.map = np.zeros(self.size, np.uint8)
+        self.terrain = np.zeros(self.size, np.uint8)
         self.seen = np.zeros(self.size, np.uint8)
+        if seen is not None:
+            for j,l in enumerate(seen.split("\n")):
+                for i,c in enumerate(l):
+                    if c!='.':
+                        self.seen[i,j] = 1
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
-        for j,l in enumerate(map.split("\n")):
+        self.objects = []
+        for j,l in enumerate(cell_map.split("\n")):
             for i,c in enumerate(l):
-                self.set_terrain((i,j),ttmap[c])
-        for j,l in enumerate(seen.split("\n")):
-            for i,c in enumerate(l):
-                if c!='.':
-                    self.seen[i,j] = 1
-                    
+                tc = cell_types[c]
+                terrain_ = tc[0]
+                contents = tc[1:]
+                self.set_terrain((i,j),terrain_)
+                self.objects.extend((i,j,o) for o in contents)
+
     def look(self, char):
         """List everything the character can see from its current position"""
         mo = collections.defaultdict(list)
@@ -236,6 +277,10 @@ def find_path(x1y1,x2y2,passable):
 
 
 if __name__ == '__main__':
-    M = load_ascii_map("data/testmap1.txt")
-    print yaml.dump(M)
-    print yaml.load(yaml.dump(M))
+    M = load_ascii_map("data/testmap2.txt")
+    f = open("data/testmap2.yaml","w")
+    yaml.dump(M,f, encoding="UTF8", allow_unicode=True)
+    f.close()
+    f = open("data/testmap2.yaml,roundtrip","w")
+    yaml.dump(yaml.load(yaml.dump(M)),f, encoding="UTF8", allow_unicode=True)
+    f.close()
