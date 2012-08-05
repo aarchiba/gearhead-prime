@@ -30,6 +30,7 @@ import random
 import yaml
 import fov
 import terrain
+import image
 
 def unicode_usable(c):
     if c in '\\ \t':
@@ -49,63 +50,60 @@ class Map(yaml.YAMLObject):
     def __init__(self, size):
         self.size = size
         self.w, self.h = self.size
-        self.terrain = np.zeros(self.size, np.uint8)
+        self.terrain_array = np.zeros(self.size, np.uint8)
         self.seen = np.zeros(self.size, np.uint8)
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
-        self.objects = []
-
-    def build_reverse_objects(self):
-        ro = collections.defaultdict(list)
-        for (x,y),o in self.objects:
-            ro[x,y].append(o)
-        return ro
+        self.objects = collections.defaultdict(list)
 
     def add_terrain_type(self, t):
         self.terrain_types.append(t)
         self.terrain_types_reverse[t] = len(self.terrain_types)-1
         if len(self.terrain_types) == 256:
-            self.terrain = self.terrain.astype(np.uint16)
+            self.terrain_array = self.terrain_array.astype(np.uint16)
         elif len(self.terrain_types) == 65536:
-            self.terrain = self.terrain.astype(np.uint32)
+            self.terrain_array = self.terrain_array.astype(np.uint32)
                 
     def terrain(self, xy):
-        return self.terrain_types[self.terrain[xy]]
+        return self.terrain_types[self.terrain_array[xy]]
         
     def set_terrain(self, xy, t):
         if t not in self.terrain_types_reverse:
             self.add_terrain_type(t)
-        self.terrain[xy] = self.terrain_types_reverse[t]
+        self.terrain_array[xy] = self.terrain_types_reverse[t]
     
     def __str__(self):
         return ("Map {0} by {1}:\n".format(self.w, self.h) + 
             "\n".join("".join(self.terrain_types[v].roguechar for v in l) 
-                        for l in self.terrain.T))
+                        for l in self.terrain_array.T))
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['terrain']
+        del d['terrain_array']
         del d['terrain_types_reverse']
         del d['terrain_types']
         del d['size']
         del d['w']
         del d['h']
         del d['objects']
-        cells = np.zeros_like(self.terrain)
+        cells = np.zeros_like(self.terrain_array)
         cell_types = { (self.terrain_types[0], ()): 0 }
         cell_chars = [' ']
         n_cell_types = 1
         unicode_used = 0
-        ro = self.build_reverse_objects()
         for i in range(self.w):
             for j in range(self.h):
-                terrain_ = self.terrain_types[self.terrain[i,j]]
-                contents = tuple(ro[i,j])
+                terrain_ = self.terrain_types[self.terrain_array[i,j]]
+                contents = tuple(self.objects[i,j])
                 if (terrain_,contents) not in cell_types:
                     cell_types[terrain_,contents] = n_cell_types
                     n_cell_types += 1
                     # choose a Unicode character
-                    # FIXME: pick a better default when c not empty
-                    ch = terrain_.roguechar
+                    # FIXME: try all contents then the terrain hoping
+                    # for an unused character
+                    if contents:
+                        ch = contents[-1].roguechar
+                    else:
+                        ch = terrain_.roguechar
                     while ch in cell_chars:
                         ch = unicode_usable[unicode_used]
                         unicode_used += 1
@@ -135,7 +133,7 @@ class Map(yaml.YAMLObject):
             self.w = max(len(l),self.w)
  
         self.size = (self.w, self.h)
-        self.terrain = np.zeros(self.size, np.uint8)
+        self.terrain_array = np.zeros(self.size, np.uint8)
         self.seen = np.zeros(self.size, np.uint8)
         if seen is not None:
             for j,l in enumerate(seen.split("\n")):
@@ -144,28 +142,71 @@ class Map(yaml.YAMLObject):
                         self.seen[i,j] = 1
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
-        self.objects = []
+        self.objects = collections.defaultdict(list)
         for j,l in enumerate(cell_map.split("\n")):
             for i,c in enumerate(l):
                 tc = cell_types[c]
                 terrain_ = tc[0]
                 contents = tc[1:]
                 self.set_terrain((i,j),terrain_)
-                self.objects.extend((i,j,o) for o in contents)
+                self.objects[i,j].extend(contents)
 
+    def is_opaque(self, ij):
+        i,j = ij
+        return self.terrain((i,j)).opaque
     def look(self, char):
         """List everything the character can see from its current position"""
-        mo = collections.defaultdict(list)
-        for o in self.movable_objects:
-            mo[o.coords].append(o)
         r = []
         def see(x,y):
             r.append(((x,y), self.terrain((x,y))))
-            for m in mo[(x,y)]:
+            for m in self.objects[(x,y)]:
                 r.append(((x,y),m))
         fov.fieldOfView(char.coords[0], char.coords[1], self.w, self.h, self.w+self.h,
-            see, lambda x,y: self.terrain((x,y)).opaque)
+            see, lambda x,y: self.is_opaque((x,y)))
         return r
+
+class Feature(yaml.YAMLObject):
+    yaml_tag = "!Feature"
+    
+    def __init__(self, name, roguechar, sdl_image_spec, 
+                 passable=True, opaque=False, description=None):
+        self.name = name
+        self.roguechar = roguechar
+        self.sdl_image_spec = sdl_image_spec
+        self.passable = passable
+        self.opaque = opaque
+        self.description = description
+        self._sprite = None
+
+    def sprite(self):
+        if self._sprite is None:
+            self._sprite = image.get(*self.sdl_image_spec)
+        return self._sprite
+        
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_sprite']
+        return d
+    def __setstate__(self,d):
+        self.__dict__ = d
+        self._sprite = None
+
+#some default thinwalls
+twfile = "SharkD_Wall_FlatTechy_b_sheet_a.png"
+twls = {}
+#ThinWall, Corner: Right and Down
+twls[u'┌'] = Feature("tw-crd", u"┌", (twfile, None, (0,288,64,96)), False, True)
+twls[u'┐'] = Feature("tw-cld", u"┐", (twfile, None, (64,192,64,96)), False, True)
+twls[u'└'] = Feature("tw-cru", u"└", (twfile, None, (64*2,96,64,96)), False, True)
+twls[u'┘'] = Feature("tw-clu", u"┘", (twfile, None, (64*3,0,64,96)), False, True)
+twls[u'─'] = Feature("tw-h",   u"─", (twfile, None, (64,96,64,96)), False, True)
+twls[u'│'] = Feature("tw-v",   u"│", (twfile, None, (64*2,96*2,64,96)), False, True)
+twls[u'┬'] = Feature("tw-jd",  u"┬", (twfile, None, (64, 96*3, 64,96)), False, True)
+twls[u'┴'] = Feature("tw-ju",  u"┴", (twfile, None, (64*3, 96, 64,96)), False, True)
+twls[u'├'] = Feature("tw-jr",  u"├", (twfile, None, (64*2, 96*3, 64,96)), False, True)
+twls[u'┤'] = Feature("tw-jl",  u"┤", (twfile, None, (64*3, 96*2, 64,96)), False, True)
+twls[u'┼'] = Feature("tw-jx",  u"┼", (twfile, None, (64*3, 96*3, 64,96)), False, True)
+
 
 def load_ascii_map(f):
     a = [line.decode('UTF-8') for line in open(f,"rt").readlines()]
@@ -180,17 +221,20 @@ def load_ascii_map(f):
     M = Map((w,len(a)))
     for j, l in enumerate(a):
         for i, c in enumerate(l):
+            obj = []
             if c=="#":
                 c = terrain.wall
             elif c==".":
                 c = terrain.floor
 
-            elif c in terrain.twls:
-                c = terrain.twls[c]
+            elif c in twls:
+                obj = [twls[c]]
+                c = terrain.floor
 
             else:
                 c = terrain.void
             M.set_terrain((i,j),c)
+            M.objects[i,j].extend(obj)
     return M
 
 

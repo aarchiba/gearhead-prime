@@ -136,7 +136,7 @@ class SDLUI(ui.UI):
         gb.gamemap = gamemap.load_ascii_map(os.path.join(os.path.dirname(__file__),"data/testmap2.txt"))
         gb.PC = game.PC()
         gb.PC.coords = (10,5)
-        gb.gamemap.movable_objects.append(gb.PC)
+        gb.gamemap.objects[gb.PC.coords].append(gb.PC)
         ui.UI.new_game(self, gb)
         
         self.layers = [MapLayer(gamemap.Map(gb.gamemap.size), gb.gamemap, self), HUDLayer(gb,self)]

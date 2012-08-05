@@ -56,8 +56,8 @@ class SDLMap(object):
         if work_rects is None:
             work_rects = [Rect(0,0,screen.get_width(),screen.get_height())]
         extra_things = collections.defaultdict(list)
-        for o in self.map_to_draw.movable_objects:
-            extra_things[o.coords].append(o.sprite())
+        for (k,v) in self.map_to_draw.objects.items():
+            extra_things[k].extend(v)
         extra_things[self.map_coords(pygame.mouse.get_pos(), screen)].append(self.mouse_cursor)
         for i in range(self.map_to_draw.w):
             for j in range(self.map_to_draw.h):
@@ -70,7 +70,11 @@ class SDLMap(object):
                 if s_pos.collidelist(work_rects)>=0:
                     screen.blit(s, s_pos)
                     if (i,j) in extra_things:
-                        for s in extra_things[(i,j)]:
+                        for t in extra_things[(i,j)]:
+                            if isinstance(t, pygame.Surface):
+                                s = t
+                            else:
+                                s = t.sprite()
                             screen.blit(s,(x-32,y+16-s.get_height()))
     def map_coords(self, xy, screen):
         x, y = xy
@@ -82,12 +86,10 @@ class SDLMap(object):
         for coords, obj in things:
             if isinstance(obj, terrain.Terrain):
                 self.map_to_draw.set_terrain(coords, obj)
-            else:
-                try:
-                    self.map_to_draw.movable_objects.remove(obj)
-                except ValueError:
-                    pass
-                self.map_to_draw.movable_objects.append(obj)
+                del self.map_to_draw.objects[coords][:]
+        for coords, obj in things:
+            if not isinstance(obj, terrain.Terrain):
+                self.map_to_draw.objects[coords].append(obj)
 
 if __name__ == '__main__':
     import sys
@@ -97,7 +99,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
 
     clock = pygame.time.Clock()
-    M = gamemap.load_ascii_map("data/testmap1.txt")
+    M = gamemap.load_ascii_map("data/testmap2.txt")
     S = SDLMap(M,M)
 
     while True:
