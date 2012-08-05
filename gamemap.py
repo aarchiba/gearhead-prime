@@ -209,18 +209,19 @@ class Feature(yaml.YAMLObject):
 #some default thinwalls
 twfile = "SharkD_Wall_FlatTechy_b_sheet_a.png"
 twls = {}
+colors = image.random_color_scheme('mecha')
 #ThinWall, Corner: Right and Down
-twls[u'┌'] = Feature("tw-crd", u"┌", (twfile, None, (0,288,64,96)), False, True)
-twls[u'┐'] = Feature("tw-cld", u"┐", (twfile, None, (64,192,64,96)), False, True)
-twls[u'└'] = Feature("tw-cru", u"└", (twfile, None, (64*2,96,64,96)), False, True)
-twls[u'┘'] = Feature("tw-clu", u"┘", (twfile, None, (64*3,0,64,96)), False, True)
-twls[u'─'] = Feature("tw-h",   u"─", (twfile, None, (64,96,64,96)), False, True)
-twls[u'│'] = Feature("tw-v",   u"│", (twfile, None, (64*2,96*2,64,96)), False, True)
-twls[u'┬'] = Feature("tw-jd",  u"┬", (twfile, None, (64, 96*3, 64,96)), False, True)
-twls[u'┴'] = Feature("tw-ju",  u"┴", (twfile, None, (64*3, 96, 64,96)), False, True)
-twls[u'├'] = Feature("tw-jr",  u"├", (twfile, None, (64*2, 96*3, 64,96)), False, True)
-twls[u'┤'] = Feature("tw-jl",  u"┤", (twfile, None, (64*3, 96*2, 64,96)), False, True)
-twls[u'┼'] = Feature("tw-jx",  u"┼", (twfile, None, (64*3, 96*3, 64,96)), False, True)
+twls[u'┌'] = Feature("tw-crd", u"┌", (twfile, colors, (0,288,64,96)), False, True)
+twls[u'┐'] = Feature("tw-cld", u"┐", (twfile, colors, (64,192,64,96)), False, True)
+twls[u'└'] = Feature("tw-cru", u"└", (twfile, colors, (64*2,96,64,96)), False, True)
+twls[u'┘'] = Feature("tw-clu", u"┘", (twfile, colors, (64*3,0,64,96)), False, True)
+twls[u'─'] = Feature("tw-h",   u"─", (twfile, colors, (64,96,64,96)), False, True)
+twls[u'│'] = Feature("tw-v",   u"│", (twfile, colors, (64*2,96*2,64,96)), False, True)
+twls[u'┬'] = Feature("tw-jd",  u"┬", (twfile, colors, (64, 96*3, 64,96)), False, True)
+twls[u'┴'] = Feature("tw-ju",  u"┴", (twfile, colors, (64*3, 96, 64,96)), False, True)
+twls[u'├'] = Feature("tw-jr",  u"├", (twfile, colors, (64*2, 96*3, 64,96)), False, True)
+twls[u'┤'] = Feature("tw-jl",  u"┤", (twfile, colors, (64*3, 96*2, 64,96)), False, True)
+twls[u'┼'] = Feature("tw-jx",  u"┼", (twfile, colors, (64*3, 96*3, 64,96)), False, True)
 
 
 def load_ascii_map(f):
