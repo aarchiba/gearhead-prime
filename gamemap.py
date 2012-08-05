@@ -52,7 +52,6 @@ class Map(yaml.YAMLObject):
         self.size = size
         self.w, self.h = self.size
         self.terrain_array = np.zeros(self.size, np.uint8)
-        self.seen = np.zeros(self.size, np.uint8)
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
         self.objects = collections.defaultdict(list)
@@ -112,10 +111,6 @@ class Map(yaml.YAMLObject):
                 cells[i,j] = cell_types[terrain_,contents]
 
         d['map'] = '\n'.join("".join(cell_chars[cells[i,j]] for i in range(self.w)) for j in range(self.h))+"\n"
-        if np.any(self.seen):
-            d['seen'] = '\n'.join("".join('*' if self.seen[i,j] else '.' for i in range(self.w)) for j in range(self.h))+"\n"
-        else:
-            del d['seen']
         d['cell_types'] = {}
         for (k,v) in cell_types.items():
             terrain_, contents = k
@@ -124,7 +119,6 @@ class Map(yaml.YAMLObject):
     def __setstate__(self, d):
         cell_types = d.pop('cell_types')
         cell_map = d.pop('map')
-        seen = d.pop('seen',None)
 
         self.__dict__ = d
         
@@ -135,12 +129,6 @@ class Map(yaml.YAMLObject):
  
         self.size = (self.w, self.h)
         self.terrain_array = np.zeros(self.size, np.uint8)
-        self.seen = np.zeros(self.size, np.uint8)
-        if seen is not None:
-            for j,l in enumerate(seen.split("\n")):
-                for i,c in enumerate(l):
-                    if c!='.':
-                        self.seen[i,j] = 1
         self.terrain_types = [terrain.void]
         self.terrain_types_reverse = { self.terrain_types[0]: 0 }
         self.objects = collections.defaultdict(list)
