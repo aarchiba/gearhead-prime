@@ -153,7 +153,22 @@ class Map(yaml.YAMLObject):
 
     def is_opaque(self, ij):
         i,j = ij
-        return self.terrain((i,j)).opaque
+        if self.terrain((i,j)).opaque:
+            return True
+        else:
+            for o in self.objects[i,j]:
+                if o.opaque:
+                    return True
+        return False
+    def is_passable(self, ij):
+        i,j = ij
+        if not self.terrain((i,j)).passable:
+            return False
+        else:
+            for o in self.objects[i,j]:
+                if hasattr(o,'passable') and not o.passable:
+                    return False
+        return True
     def look(self, char):
         """List everything the character can see from its current position"""
         r = []

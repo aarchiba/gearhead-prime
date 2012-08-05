@@ -62,7 +62,7 @@ def TurnAndGo(PC, orientation):
 def GoTo(PC,current_map,coords):
     while True:
         try:
-            p, d = gamemap.find_path(PC.coords, coords, lambda x,y: current_map.terrain((x,y)).passable)
+            p, d = gamemap.find_path(PC.coords, coords, lambda x,y: current_map.is_passable((x,y)))
         except gamemap.NoPathException, e:
             p, d = e.best_effort
         if len(p)>1:

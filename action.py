@@ -58,7 +58,7 @@ class Advance(Action):
         x, y = gameboard.PC.coords
         delta_x, delta_y = gamemap.orientation_to_delta[gameboard.PC.orientation]
         to_x, to_y = x+delta_x, y+delta_y
-        if gameboard.gamemap.terrain((to_x,to_y)).passable:
+        if gameboard.gamemap.is_passable((to_x,to_y)):
             gameboard.gamemap.objects[gameboard.PC.coords].remove(gameboard.PC)
             gameboard.PC.coords = to_x, to_y
             gameboard.gamemap.objects[gameboard.PC.coords].append(gameboard.PC)
