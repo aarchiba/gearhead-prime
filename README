@@ -55,5 +55,5 @@ Inclusions
 Gearhead Prime includes a certain amount of code from other sources.
 In particular, it includes a permissive field-of-view algorithm from
 roguebasin, and it includes a modified copy of the python "yaml"
-package for XML-based serialization of python objects. It also includes
+package for serialization of python objects. It also includes
 images from the original Gearhead.
