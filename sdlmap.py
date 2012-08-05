@@ -25,6 +25,7 @@ import collections
 import pygame
 from pygame import Rect
 
+import util
 import gamemap
 import image
 import terrain
@@ -99,7 +100,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
 
     clock = pygame.time.Clock()
-    M = gamemap.load_ascii_map("data/testmap2.txt")
+    M = gamemap.load_ascii_map(util.data_dir("testmap2.txt"))
     S = SDLMap(M,M)
 
     while True:

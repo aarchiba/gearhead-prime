@@ -27,6 +27,7 @@ import heapq
 import numpy as np
 import random
 
+import util
 import yaml
 import fov
 import terrain
@@ -337,10 +338,10 @@ def find_path(x1y1,x2y2,passable):
 
 
 if __name__ == '__main__':
-    M = load_ascii_map("data/testmap2.txt")
-    f = open("data/testmap2.yaml","w")
+    M = load_ascii_map(util.data_dir("testmap2.txt"))
+    f = open(util.data_dir("testmap2.yaml"),"w")
     yaml.dump(M,f, encoding="UTF8", allow_unicode=True)
     f.close()
-    f = open("data/testmap2.yaml,roundtrip","w")
+    f = open(util.data_dir("testmap2.yaml,roundtrip"),"w")
     yaml.dump(yaml.load(yaml.dump(M)),f, encoding="UTF8", allow_unicode=True)
     f.close()

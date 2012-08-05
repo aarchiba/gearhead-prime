@@ -29,10 +29,11 @@ surfarray.use_arraytype('numpy')
 import numpy as np
 
 import lru
+import util
 
 # Cache of recolored images: keep them around as long as they're in use
 _images = weakref.WeakValueDictionary()
-_image_dir = os.path.join(os.path.dirname(__file__), "images")
+_image_dir = util.image_dir()
 # Use LRU to make sure the weakref deletion isn't too aggressive
 @lru.cache()
 def get(name, recoloring = None, rect = None):
@@ -86,7 +87,7 @@ def recolor(image, mode):
     return image
 
 colors = None
-def load_sdl_colors_txt(filename=os.path.join(os.path.dirname(__file__),"data/sdl_colors.txt")):
+def load_sdl_colors_txt(filename=util.data_dir("sdl_colors.txt")):
     global colors, personal, mecha
 
     if colors is not None:
