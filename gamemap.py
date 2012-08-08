@@ -180,6 +180,19 @@ class Map(yaml.YAMLObject):
         fov.fieldOfView(char.coords[0], char.coords[1], self.w, self.h, self.w+self.h,
             see, lambda x,y: self.is_opaque((x,y)))
         return r
+    def lsobjects(self, filterfunc=None):
+        """Return a set of all objects on the map, optionally filtered."""
+        #TODO? optionally only return objects inside a certain rect of coords
+        ls = set()
+        #[[ls.update(set(matches)) for matches in filter(filterfunc, tile_contents)]
+         #   for tile_contents in self.objects.values()]
+        for tile_contents in self.objects.values():
+            for obj in tile_contents:
+                if not filterfunc:
+                    ls.add(obj)
+                elif filterfunc(obj):
+                    ls.add(obj)
+        return ls
 
 class Feature(yaml.YAMLObject):
     yaml_tag = "!Feature"
@@ -258,7 +271,7 @@ def load_ascii_map(f):
 
             elif c=='+':
                 c = terrain.floor
-                obj = [ Door(closed = bool(random.getrandbits(1))) ]
+                obj = [Door( (i,j), closed = bool(random.getrandbits(1)) )]
 
             else:
                 c = terrain.void
@@ -288,10 +301,11 @@ def adjacent(pos1, pos2):
 
 #another attempt at doors:
 class Door(Feature):
-    def __init__(self, colors=None, closed=True):
+    def __init__(self, coords, colors=None, closed=True):
         Feature.__init__(self, 'door', '+', None, description="Door")
         del self._passable, self._opaque, self._sprite
 
+        self.coords = (coords[0], coords[1])
         if colors is None:
             colors = image.random_color_scheme('mecha')
         self.colors = colors
