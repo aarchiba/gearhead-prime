@@ -194,6 +194,7 @@ class Feature(yaml.YAMLObject):
         self.description = description
         self._sprite = None
 
+    @property
     def sprite(self):
         if self._sprite is None:
             self._sprite = image.get(*self.sdl_image_spec)

@@ -32,6 +32,7 @@ class PC(object):
         self.map = None
         self.coords = (0,0)
 
+    @property
     def sprite(self):
         return self.sprites[self.orientation]
     
