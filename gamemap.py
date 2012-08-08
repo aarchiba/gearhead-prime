@@ -271,7 +271,7 @@ def load_ascii_map(f):
 
             elif c=='+':
                 c = terrain.floor
-                obj = [Door( (i,j), closed = bool(random.getrandbits(1)) )]
+                obj = [Door((i,j))]
 
             else:
                 c = terrain.void

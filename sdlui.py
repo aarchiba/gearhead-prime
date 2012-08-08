@@ -34,6 +34,8 @@ import sdlmap
 import command
 import action
 
+import random
+
 class Layer(object):
     def handle(self, event):
         return False
@@ -114,6 +116,7 @@ class MapLayer(Layer):
             kptovi = {K_KP1:u'b', K_KP2:u'j', K_KP3:u'n', K_KP4:u'h',
                 K_KP6:u'l', K_KP7:u'y', K_KP8:u'k', K_KP9:u'u'}
             vitodelta = dict([ (kptovi[i[0]], i[1]) for i in kptodelta.items() ])
+            #FIXME gotta move dis stuff ^ somewhere else
             if event.key in kptodelta.keys():
                 direction = gamemap.delta_to_orientation[kptodelta[event.key]]
                 self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, direction))
@@ -121,8 +124,7 @@ class MapLayer(Layer):
                 direction = gamemap.delta_to_orientation[vitodelta[event.unicode]]
                 self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, direction))
 
-            elif event.unicode == u'O':
-                print 'attempt open'
+            elif event.unicode in [u'O', u'C']:
                 #open a door
                 filterfunc = lambda x: isinstance(x, gamemap.Door) and \
                               gamemap.adjacent(x.coords, self.ui.gameboard.PC.coords)
@@ -134,13 +136,16 @@ class MapLayer(Layer):
                # filteradj = lambda x: gamemap.adjacent(x.coords, self.ui.gameboard.PC.coords)
                # adjdoors = filter(filteradj, doorlist)
                 adjdoors = self.gamemap.lsobjects(filterfunc)
-                print 'adjdoors:', adjdoors
-                if not adjdoors:
+                if len(adjdoors)==0:
                     return True
-                elif len(adjdoors)==1:
-                    self.ui.command_processor.issue(command.ActionSequence([action.OpenDoor(self.ui.gameboard.PC, adjdoors.pop())]))  #FIXME this is getting really verbose
-                else:
-                    raise NotImplemented, "Can't choose between multiple doors for interaction (yet)"
+
+                door = adjdoors.pop()
+                #FIXME: this will interact with a random door if there is more than one. choice should be given
+                if event.unicode==u'O':   actioncls = action.OpenDoor
+                elif event.unicode==u'C': actioncls = action.CloseDoor
+
+                self.ui.command_processor.issue(command.ActionSequence([actioncls(self.ui.gameboard.PC, door)]))  #FIXME getting hold of the PC and such is getting very verbose...
+                return True
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             click_pos = self.sdlmap.map_coords(event.pos, self.screen)
