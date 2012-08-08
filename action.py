@@ -59,13 +59,18 @@ class Advance(Action):
         delta_x, delta_y = gamemap.orientation_to_delta[gameboard.PC.orientation]
         to_x, to_y = x+delta_x, y+delta_y
         if gameboard.gamemap.is_passable((to_x,to_y)):
+
+            #check if any doors in the way
+            #doors register as always passable, so pathing can work
+            #if filter(lambda x: issubclass(x,gamemap.Door), gameboard.gamemap.objects)
+            #^ temporarily cancelled: made door.passable depend on open, disadvantage being no pathing through doors
+
             gameboard.gamemap.objects[gameboard.PC.coords].remove(gameboard.PC)
             gameboard.PC.coords = to_x, to_y
             gameboard.gamemap.objects[gameboard.PC.coords].append(gameboard.PC)
         else:
             raise ActionFailure, "Cannot advance into (%i,%i): blocked by terrain"\
                 % (to_x, to_y)
-        #    gameboard.post_message("Cannot move forward: blocked by terrain")
 
 
 

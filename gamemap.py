@@ -189,9 +189,9 @@ class Feature(yaml.YAMLObject):
         self.name = name
         self.roguechar = roguechar
         self.sdl_image_spec = sdl_image_spec
-        self.passable = passable
-        self.opaque = opaque
         self.description = description
+        self._passable = passable
+        self._opaque = opaque
         self._sprite = None
 
     @property
@@ -199,6 +199,13 @@ class Feature(yaml.YAMLObject):
         if self._sprite is None:
             self._sprite = image.get(*self.sdl_image_spec)
         return self._sprite
+
+    @property
+    def passable(self):
+        return self._passable
+    @property
+    def opaque(self):
+        return self._opaque
         
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -249,6 +256,10 @@ def load_ascii_map(f):
                 obj = [twls[c]]
                 c = terrain.floor
 
+            elif c=='+':
+                c = terrain.floor
+                obj = [ Door(closed = bool(random.getrandbits(1))) ]
+
             else:
                 c = terrain.void
             M.set_terrain((i,j),c)
@@ -275,6 +286,36 @@ def adjacent(pos1, pos2):
     return (not pos1==pos2) and abs(x1-x2)<=1 and abs(y1-y2)<=1
 
 
+#another attempt at doors:
+class Door(Feature):
+    def __init__(self, colors=None, closed=True):
+        Feature.__init__(self, 'door', '+', None, description="Door")
+        del self._passable, self._opaque, self._sprite
+
+        if colors is None:
+            colors = image.random_color_scheme('mecha')
+        self.colors = colors
+        self.closed = closed
+        
+    @property
+    def sprite(self):
+        x = 0 #TODO: door orientation
+        y = 0
+        if not self.closed: y = 96
+        return image.get("door_a.png", self.colors, (x,y,64,96))
+
+    @property
+    def passable(self):
+        return not self.closed
+    @property
+    def opaque(self):
+        return self.closed
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        return d
+    def __setstate__(self, d):
+        self.__dict__ = d
 
 
 
