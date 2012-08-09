@@ -139,10 +139,17 @@ class MapLayer(Layer):
                 if len(adjdoors)==0:
                     return True
 
-                door = adjdoors.pop()
-                #FIXME: this will interact with a random door if there is more than one. choice should be given
-                if event.unicode==u'O':   actioncls = action.OpenDoor
-                elif event.unicode==u'C': actioncls = action.CloseDoor
+                opendoors =  filter(lambda d: not d.closed, adjdoors)  or adjdoors
+                closedoors = filter(lambda d: d.closed, adjdoors)      or adjdoors
+                #^ this will revert to the full adjdoors list if there are no matches because of the or
+
+                #FIXME: this will interact with a random appropriate if there is more than one. choice should be given
+                if event.unicode==u'O':
+                    actioncls = action.OpenDoor
+                    door = closedoors.pop()
+                elif event.unicode==u'C':
+                    actioncls = action.CloseDoor
+                    door = opendoors.pop()
 
                 self.ui.command_processor.issue(command.ActionSequence([actioncls(self.ui.gameboard.PC, door)]))  #FIXME getting hold of the PC and such is getting very verbose...
                 return True

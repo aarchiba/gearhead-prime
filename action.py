@@ -82,7 +82,6 @@ class OpenDoor(Action):
             raise ActionFailure, "Cannot open door: not adjacent to it."
         if self.door.closed:
             self.door.closed = False
-#TODO: some time-passing mechanism should be implemented at some point
 
 class CloseDoor(Action):
     def __init__(self, subj, door):

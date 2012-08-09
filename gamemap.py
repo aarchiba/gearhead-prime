@@ -271,7 +271,7 @@ def load_ascii_map(f):
 
             elif c=='+':
                 c = terrain.floor
-                obj = [Door((i,j))]
+                obj = [Door((i,j), map=M)]
 
             else:
                 c = terrain.void
@@ -301,22 +301,26 @@ def adjacent(pos1, pos2):
 
 #another attempt at doors:
 class Door(Feature):
-    def __init__(self, coords, colors=None, closed=True):
+    OR_HORI, OR_VERT = 0, 1
+    def __init__(self, coords, closed=True, locked=False, map=None, orien=None):
+        """coords: location on map
+map: optional reference back to containing Map
+orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
         Feature.__init__(self, 'door', '+', None, description="Door")
         del self._passable, self._opaque, self._sprite
 
         self.coords = (coords[0], coords[1])
-        if colors is None:
-            colors = image.random_color_scheme('mecha')
-        self.colors = colors
         self.closed = closed
+        self.map = map
+        self._orien = orien
         
     @property
     def sprite(self):
-        x = 0 #TODO: door orientation
+        if self.orien==Door.OR_HORI: x=64
+        else: x=0
         y = 0
         if not self.closed: y = 96
-        return image.get("door_a.png", self.colors, (x,y,64,96))
+        return image.get("door_a.png", None, (x,y,64,96))
 
     @property
     def passable(self):
@@ -324,6 +328,27 @@ class Door(Feature):
     @property
     def opaque(self):
         return self.closed
+    @property
+    def orien(self):
+        if self._orien not in (Door.OR_HORI,Door.OR_VERT):
+            if self.map is not None:
+                self._orien = Door.detect_door_orientation(self, self.map)
+            else:
+                self._orien = Door.OR_HORI
+        return self._orien
+
+    @staticmethod
+    def detect_door_orientation(door, mp):
+        hscore, vscore = 0, 0
+        dx,dy = door.coords
+        #if len(map.objects[(dx+1,dy)]): hscore-=1
+        if mp.is_passable((dx+1,dy)): hscore-=1
+        if mp.is_passable((dx-1,dy)): hscore-=1
+        if mp.is_passable((dx,dy+1)): vscore-=1
+        if mp.is_passable((dx,dy-1)): vscore-=1
+        
+        if vscore > hscore: return Door.OR_VERT
+        else: return Door.OR_HORI
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -366,9 +391,9 @@ def find_path(x1y1,x2y2,passable):
         path_so_far, l_so_far = path_to[node]
 
         nx, ny = node
-        #FIXME: random.sample here doesn't seem to make pathfinding moar random
-        for i in random.sample((-1,0,1), 3):
-            for j in random.sample((-1,0,1), 3):
+        #FIXME: make pathfinding more random
+        for i in (-1,0,1):
+            for j in (-1,0,1):
                 nbx, nby = nx+i, ny+j
                 if not passable(nbx,nby):
                     continue
