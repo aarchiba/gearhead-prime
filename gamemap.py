@@ -168,6 +168,19 @@ class Map(yaml.YAMLObject):
         fov.fieldOfView(char.coords[0], char.coords[1], self.w, self.h, self.w+self.h,
             see, lambda x,y: self.is_opaque((x,y)))
         return r
+    def lsobjects(self, filterfunc=None):
+        """Return a set of all objects on the map, optionally filtered."""
+        #TODO? optionally only return objects inside a certain rect of coords
+        ls = set()
+        #[[ls.update(set(matches)) for matches in filter(filterfunc, tile_contents)]
+         #   for tile_contents in self.objects.values()]
+        for tile_contents in self.objects.values():
+            for obj in tile_contents:
+                if not filterfunc:
+                    ls.add(obj)
+                elif filterfunc(obj):
+                    ls.add(obj)
+        return ls
 
 class Feature(yaml.YAMLObject):
     yaml_tag = "!Feature"
@@ -177,15 +190,23 @@ class Feature(yaml.YAMLObject):
         self.name = name
         self.roguechar = roguechar
         self.sdl_image_spec = sdl_image_spec
-        self.passable = passable
-        self.opaque = opaque
         self.description = description
+        self._passable = passable
+        self._opaque = opaque
         self._sprite = None
 
+    @property
     def sprite(self):
         if self._sprite is None:
             self._sprite = image.get(*self.sdl_image_spec)
         return self._sprite
+
+    @property
+    def passable(self):
+        return self._passable
+    @property
+    def opaque(self):
+        return self._opaque
         
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -236,6 +257,10 @@ def load_ascii_map(f):
                 obj = [twls[c]]
                 c = terrain.floor
 
+            elif c=='+':
+                c = terrain.floor
+                obj = [Door((i,j), map=M)]
+
             else:
                 c = terrain.void
             M.set_terrain((i,j),c)
@@ -262,6 +287,62 @@ def adjacent(pos1, pos2):
     return (not pos1==pos2) and abs(x1-x2)<=1 and abs(y1-y2)<=1
 
 
+#another attempt at doors:
+class Door(Feature):
+    OR_HORI, OR_VERT = 0, 1
+    def __init__(self, coords, closed=True, locked=False, map=None, orien=None):
+        """coords: location on map
+map: optional reference back to containing Map
+orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
+        Feature.__init__(self, 'door', '+', None, description="Door")
+        del self._passable, self._opaque, self._sprite
+
+        self.coords = (coords[0], coords[1])
+        self.closed = closed
+        self.map = map
+        self._orien = orien
+        
+    @property
+    def sprite(self):
+        if self.orien==Door.OR_HORI: x=64
+        else: x=0
+        y = 0
+        if not self.closed: y = 96
+        return image.get("door_a.png", None, (x,y,64,96))
+
+    @property
+    def passable(self):
+        return not self.closed
+    @property
+    def opaque(self):
+        return self.closed
+    @property
+    def orien(self):
+        if self._orien not in (Door.OR_HORI,Door.OR_VERT):
+            if self.map is not None:
+                self._orien = Door.detect_door_orientation(self, self.map)
+            else:
+                self._orien = Door.OR_HORI
+        return self._orien
+
+    @staticmethod
+    def detect_door_orientation(door, mp):
+        hscore, vscore = 0, 0
+        dx,dy = door.coords
+        #if len(map.objects[(dx+1,dy)]): hscore-=1
+        if mp.is_passable((dx+1,dy)): hscore-=1
+        if mp.is_passable((dx-1,dy)): hscore-=1
+        if mp.is_passable((dx,dy+1)): vscore-=1
+        if mp.is_passable((dx,dy-1)): vscore-=1
+        
+        if vscore > hscore: return Door.OR_VERT
+        else: return Door.OR_HORI
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        return d
+    def __setstate__(self, d):
+        self.__dict__ = d
 
 
 
@@ -298,9 +379,9 @@ def find_path(x1y1,x2y2,passable):
         path_so_far, l_so_far = path_to[node]
 
         nx, ny = node
-        #FIXME: random.sample here doesn't seem to make pathfinding moar random
-        for i in random.sample((-1,0,1), 3):
-            for j in random.sample((-1,0,1), 3):
+        #FIXME: make pathfinding more random
+        for i in (-1,0,1):
+            for j in (-1,0,1):
                 nbx, nby = nx+i, ny+j
                 if not passable(nbx,nby):
                     continue
