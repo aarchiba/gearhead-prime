@@ -27,33 +27,18 @@ import image
 class Terrain(yaml.YAMLObject):
     yaml_tag = "!Terrain"
     
-    def __init__(self, name, roguechar, sdl_image_spec, 
+    def __init__(self, name, roguechar, sprite, 
                  passable=True, opaque=False, description=None):
         self.name = name
         self.roguechar = roguechar
-        self.sdl_image_spec = sdl_image_spec
+        self.sprite = sprite
         self.passable = passable
         self.opaque = opaque
         self.description = description
-        self._sprite = None
-
-    @property
-    def sprite(self):
-        if self._sprite is None:
-            self._sprite = image.get(*self.sdl_image_spec)
-        return self._sprite
         
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sprite']
-        return d
-    def __setstate__(self,d):
-        self.__dict__ = d
-        self._sprite = None
-        
-void = Terrain("void", " ", ("big_terrain.png", None, (576,0,64,96)), passable=False)
-floor = Terrain("floor", ".", ("big_terrain.png", None, (576,96,64,96)))
-wall = Terrain("wall", "#", ("big_terrain.png", None, (448,288,64,96)), passable=False, opaque=True)
+void = Terrain("void", " ", image.Image("big_terrain.png", None, (576,0,64,96)), passable=False)
+floor = Terrain("floor", ".", image.Image("big_terrain.png", None, (576,96,64,96)))
+wall = Terrain("wall", "#", image.Image("big_terrain.png", None, (448,288,64,96)), passable=False, opaque=True)
 
 if __name__=='__main__':
     pass

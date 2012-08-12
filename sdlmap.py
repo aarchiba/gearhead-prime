@@ -66,7 +66,7 @@ class SDLMap(object):
                 view_y =  16*i+16*j
                 x, y = view_x - self.view_x + screen.get_width()//2, view_y-self.view_y + screen.get_height()//2
                 t = self.map_to_draw.terrain((i,j))
-                s = t.sprite
+                s = t.sprite.image
                 s_pos = Rect(x-32,y+16-s.get_height(),s.get_width(),s.get_height())
                 if s_pos.collidelist(work_rects)>=0:
                     screen.blit(s, s_pos)
@@ -75,7 +75,7 @@ class SDLMap(object):
                             if isinstance(t, pygame.Surface):
                                 s = t
                             else:
-                                s = t.sprite
+                                s = t.sprite.image
                             screen.blit(s,(x-32,y+16-s.get_height()))
     def map_coords(self, xy, screen):
         x, y = xy

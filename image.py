@@ -30,6 +30,7 @@ import numpy as np
 
 import lru
 import util
+import yaml
 
 # Cache of recolored images: keep them around as long as they're in use
 _images = weakref.WeakValueDictionary()
@@ -55,9 +56,9 @@ def get(name, recoloring = None, rect = None):
 def recolor(image, mode):
     if mode is None:
         return
-    red = mode.get('red', (255,0,0))
-    yellow = mode.get('yellow', (255,255,0))
-    green = mode.get('green', (0,255,0))
+    red = mode.red
+    yellow = mode.yellow
+    green = mode.green
     red, yellow, green = (np.asarray(c,np.uint8) for c in (red, yellow, green))
     # We need to make a copy in this specific format
     image = image.convert_alpha(pygame.Surface((1,1), pygame.SRCALPHA, 32))
@@ -121,11 +122,14 @@ def load_sdl_colors_txt(filename=util.data_dir("sdl_colors.txt")):
             else:
                 assert flags[i+3]=="-"
               
-class ColorScheme(dict):
+class ColorScheme(yaml.YAMLObject):
+    yaml_tag = "!ColorScheme"
     def __init__(self, red=(255,0,0), green=(0,255,0), yellow=(255,255,0)):
-        dict.__init__(self, red=red, green=green, yellow=yellow)
+        self.red=list(red)
+        self.green=list(green)
+        self.yellow=list(yellow)
     def __hash__(self):
-        return hash(tuple(self.items()))
+        return hash((tuple(self.red),tuple(self.green),tuple(self.yellow)))
 def random_color_scheme(kind=None):
     if colors is None:
         load_sdl_colors_txt()
@@ -151,6 +155,18 @@ class MultiSpriteFile(object):
         i, j = ij
         w, h = self.sprite_size
         return Rect(i*w, j*h, w, h)
+    
+class Image(yaml.YAMLObject):
+    yaml_tag = "!Image"
+    
+    def __init__(self, name, recoloring = None, rect = None):
+        self.name = name
+        self.recoloring = recoloring
+        self.rect = list(rect)
+    
+    @property
+    def image(self):
+        return get(self.name, self.recoloring, tuple(self.rect))
     
 
 if __name__ == '__main__':

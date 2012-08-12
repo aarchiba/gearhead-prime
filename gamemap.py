@@ -105,7 +105,7 @@ class Map(yaml.YAMLObject):
                     else:
                         ch = terrain_.roguechar
                     while ch in cell_chars:
-                        ch = unicode_usable[unicode_used]
+                        ch = usable_unicode_chars[unicode_used]
                         unicode_used += 1
                     cell_chars.append(ch)
                 cells[i,j] = cell_types[terrain_,contents]
@@ -113,6 +113,8 @@ class Map(yaml.YAMLObject):
         d['map'] = '\n'.join("".join(cell_chars[cells[i,j]] for i in range(self.w)) for j in range(self.h))+"\n"
         d['cell_types'] = {}
         for (k,v) in cell_types.items():
+            if cell_chars[v] == ' ':
+                continue
             terrain_, contents = k
             d['cell_types'][cell_chars[v]] = [terrain_]+list(contents)
         return d
@@ -185,21 +187,14 @@ class Map(yaml.YAMLObject):
 class Feature(yaml.YAMLObject):
     yaml_tag = "!Feature"
     
-    def __init__(self, name, roguechar, sdl_image_spec, 
+    def __init__(self, name, roguechar, sprite, 
                  passable=True, opaque=False, description=None):
         self.name = name
         self.roguechar = roguechar
-        self.sdl_image_spec = sdl_image_spec
+        self.sprite = sprite
         self.description = description
         self._passable = passable
         self._opaque = opaque
-        self._sprite = None
-
-    @property
-    def sprite(self):
-        if self._sprite is None:
-            self._sprite = image.get(*self.sdl_image_spec)
-        return self._sprite
 
     @property
     def passable(self):
@@ -208,30 +203,22 @@ class Feature(yaml.YAMLObject):
     def opaque(self):
         return self._opaque
         
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sprite']
-        return d
-    def __setstate__(self,d):
-        self.__dict__ = d
-        self._sprite = None
-
 #some default thinwalls
 twfile = "SharkD_Wall_FlatTechy_b_sheet_a.png"
 twls = {}
 colors = image.random_color_scheme('mecha')
 #ThinWall, Corner: Right and Down
-twls[u'┌'] = Feature("tw-crd", u"┌", (twfile, colors, (0,288,64,96)), False, True)
-twls[u'┐'] = Feature("tw-cld", u"┐", (twfile, colors, (64,192,64,96)), False, True)
-twls[u'└'] = Feature("tw-cru", u"└", (twfile, colors, (64*2,96,64,96)), False, True)
-twls[u'┘'] = Feature("tw-clu", u"┘", (twfile, colors, (64*3,0,64,96)), False, True)
-twls[u'─'] = Feature("tw-h",   u"─", (twfile, colors, (64,96,64,96)), False, True)
-twls[u'│'] = Feature("tw-v",   u"│", (twfile, colors, (64*2,96*2,64,96)), False, True)
-twls[u'┬'] = Feature("tw-jd",  u"┬", (twfile, colors, (64, 96*3, 64,96)), False, True)
-twls[u'┴'] = Feature("tw-ju",  u"┴", (twfile, colors, (64*3, 96, 64,96)), False, True)
-twls[u'├'] = Feature("tw-jr",  u"├", (twfile, colors, (64*2, 96*3, 64,96)), False, True)
-twls[u'┤'] = Feature("tw-jl",  u"┤", (twfile, colors, (64*3, 96*2, 64,96)), False, True)
-twls[u'┼'] = Feature("tw-jx",  u"┼", (twfile, colors, (64*3, 96*3, 64,96)), False, True)
+twls[u'┌'] = Feature("tw-crd", u"┌", image.Image(twfile, colors, (0,288,64,96)), False, True)
+twls[u'┐'] = Feature("tw-cld", u"┐", image.Image(twfile, colors, (64,192,64,96)), False, True)
+twls[u'└'] = Feature("tw-cru", u"└", image.Image(twfile, colors, (64*2,96,64,96)), False, True)
+twls[u'┘'] = Feature("tw-clu", u"┘", image.Image(twfile, colors, (64*3,0,64,96)), False, True)
+twls[u'─'] = Feature("tw-h",   u"─", image.Image(twfile, colors, (64,96,64,96)), False, True)
+twls[u'│'] = Feature("tw-v",   u"│", image.Image(twfile, colors, (64*2,96*2,64,96)), False, True)
+twls[u'┬'] = Feature("tw-jd",  u"┬", image.Image(twfile, colors, (64, 96*3, 64,96)), False, True)
+twls[u'┴'] = Feature("tw-ju",  u"┴", image.Image(twfile, colors, (64*3, 96, 64,96)), False, True)
+twls[u'├'] = Feature("tw-jr",  u"├", image.Image(twfile, colors, (64*2, 96*3, 64,96)), False, True)
+twls[u'┤'] = Feature("tw-jl",  u"┤", image.Image(twfile, colors, (64*3, 96*2, 64,96)), False, True)
+twls[u'┼'] = Feature("tw-jx",  u"┼", image.Image(twfile, colors, (64*3, 96*3, 64,96)), False, True)
 
 
 def load_ascii_map(f):
@@ -304,25 +291,34 @@ def neighbors(coords):
             yield (i+k,j+l)
 
 class Door(Feature):
+    yaml_tag = "!Door"
     OR_HORI, OR_VERT = 0, 1
     def __init__(self, orien, closed=True, locked=False):
         """coords: location on map
 map: optional reference back to containing Map
 orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
-        Feature.__init__(self, 'door', '+', None, description="Door")
-        del self._passable, self._opaque, self._sprite
+        self.name = 'door'
+        self.roguechar = '+'
+        self.description = None
 
+        self.open_sprite = { 
+            Door.OR_HORI: image.Image("door_a.png", None, (64,96,64,96)),
+            Door.OR_VERT: image.Image("door_a.png", None, (0,96,64,96)),
+        }
+        self.closed_sprite = { 
+            Door.OR_HORI: image.Image("door_a.png", None, (64,0,64,96)),
+            Door.OR_VERT: image.Image("door_a.png", None, (0,0,64,96)),
+        }
         self.locked = locked
         self.closed = closed
         self.orien = orien
         
     @property
     def sprite(self):
-        if self.orien==Door.OR_HORI: x=64
-        else: x=0
-        y = 0
-        if not self.closed: y = 96
-        return image.get("door_a.png", None, (x,y,64,96))
+        if self.closed:
+            return self.closed_sprite[self.orien]
+        else:
+            return self.open_sprite[self.orien]
 
     @property
     def passable(self):
@@ -330,13 +326,6 @@ orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
     @property
     def opaque(self):
         return self.closed
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        return d
-    def __setstate__(self, d):
-        self.__dict__ = d
-
 
 
 

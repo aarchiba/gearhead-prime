@@ -27,7 +27,7 @@ class PC(object):
         import image
         self.colors = image.random_color_scheme("personal")
         print self.colors
-        self.sprites = [image.get("cha_f_mechanic.png", self.colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)]
+        self.sprites = [image.Image("cha_f_mechanic.png", self.colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)]
         self.orientation = 0
         self.map = None
         self.coords = (0,0)
