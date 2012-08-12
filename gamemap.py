@@ -113,10 +113,15 @@ class Map(yaml.YAMLObject):
         d['map'] = '\n'.join("".join(cell_chars[cells[i,j]] for i in range(self.w)) for j in range(self.h))+"\n"
         d['cell_types'] = {}
         for (k,v) in cell_types.items():
-            if cell_chars[v] == ' ':
+            c = cell_chars[v]
+            if c == ' ':
                 continue
+            try:
+                c = c.encode('ascii')
+            except UnicodeEncodeError:
+                pass
             terrain_, contents = k
-            d['cell_types'][cell_chars[v]] = [terrain_]+list(contents)
+            d['cell_types'][c] = [terrain_]+list(contents)
         return d
     def __setstate__(self, d):
         cell_types = d.pop('cell_types')
