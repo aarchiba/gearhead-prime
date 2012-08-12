@@ -21,22 +21,25 @@
 # 
 
 import yaml
+import image
 
-class PC(object):
-    def __init__(self):
-        import image
-        self.colors = image.random_color_scheme("personal")
-        print self.colors
-        self.sprites = [image.Image("cha_f_mechanic.png", self.colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)]
-        self.orientation = 0
-        self.map = None
-        self.coords = (0,0)
-
+class Character(yaml.YAMLObject):
+    yaml_tag = "!Character"    
+    def __init__(self, sprites, orientation=0):
+        self.sprites = sprites
+        self.orientation = orientation
     @property
     def sprite(self):
         return self.sprites[self.orientation]
-    
-        
+
+class PC(Character):
+    def __init__(self):
+        self.colors = image.random_color_scheme("personal")
+        Character.__init__(self, 
+            [image.Image("cha_f_mechanic.png", self.colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)])
+        self.map = None
+        self.coords = (0,0)
+
 
 class Gameboard(yaml.YAMLObject):
     yaml_tag = "!Gameboard"
