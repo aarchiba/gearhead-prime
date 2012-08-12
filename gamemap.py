@@ -245,6 +245,7 @@ def load_ascii_map(f):
     w = max(len(l) for l in a)
     a = [l+" "*(w-len(l)) for l in a]
     M = Map((w,len(a)))
+    doors = []
     for j, l in enumerate(a):
         for i, c in enumerate(l):
             obj = []
@@ -259,12 +260,20 @@ def load_ascii_map(f):
 
             elif c=='+':
                 c = terrain.floor
-                obj = [Door((i,j), map=M)]
+                doors.append((i,j))
 
             else:
                 c = terrain.void
             M.set_terrain((i,j),c)
             M.objects[i,j].extend(obj)
+        for (i,j) in doors:
+            hscore = 0
+            vscore = 0
+            if not M.is_passable((i-1,j)): hscore += 1
+            if not M.is_passable((i+1,j)): hscore += 1
+            if not M.is_passable((i,j+1)): vscore += 1
+            if not M.is_passable((i,j-1)): vscore += 1
+            M.objects[i,j].append(Door(Door.OR_HORI if hscore>vscore else Door.OR_VERT))
     return M
 
 
@@ -287,20 +296,17 @@ def adjacent(pos1, pos2):
     return (not pos1==pos2) and abs(x1-x2)<=1 and abs(y1-y2)<=1
 
 
-#another attempt at doors:
 class Door(Feature):
     OR_HORI, OR_VERT = 0, 1
-    def __init__(self, coords, closed=True, locked=False, map=None, orien=None):
+    def __init__(self, orien, closed=True, locked=False):
         """coords: location on map
 map: optional reference back to containing Map
 orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
         Feature.__init__(self, 'door', '+', None, description="Door")
         del self._passable, self._opaque, self._sprite
 
-        self.coords = (coords[0], coords[1])
         self.closed = closed
-        self.map = map
-        self._orien = orien
+        self.orien = orien
         
     @property
     def sprite(self):
@@ -316,27 +322,6 @@ orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
     @property
     def opaque(self):
         return self.closed
-    @property
-    def orien(self):
-        if self._orien not in (Door.OR_HORI,Door.OR_VERT):
-            if self.map is not None:
-                self._orien = Door.detect_door_orientation(self, self.map)
-            else:
-                self._orien = Door.OR_HORI
-        return self._orien
-
-    @staticmethod
-    def detect_door_orientation(door, mp):
-        hscore, vscore = 0, 0
-        dx,dy = door.coords
-        #if len(map.objects[(dx+1,dy)]): hscore-=1
-        if mp.is_passable((dx+1,dy)): hscore-=1
-        if mp.is_passable((dx-1,dy)): hscore-=1
-        if mp.is_passable((dx,dy+1)): vscore-=1
-        if mp.is_passable((dx,dy-1)): vscore-=1
-        
-        if vscore > hscore: return Door.OR_VERT
-        else: return Door.OR_HORI
 
     def __getstate__(self):
         d = self.__dict__.copy()
