@@ -33,6 +33,7 @@ import gamemap
 import sdlmap
 import command
 import action
+import image
 
 import random
 
@@ -164,7 +165,12 @@ class SDLUI(ui.UI):
         gb.gamemap = gamemap.load_ascii_map(util.data_dir("testmap2.txt"))
         gb.PC = game.PC()
         gb.PC.coords = (10,5)
+        gb.PC.map = gb.gamemap
         gb.gamemap.objects[gb.PC.coords].append(gb.PC)
+        m = game.Monster("rat", image.character_sprites("monster_rat.png"), 
+            map=gb.gamemap, coords=(1,1))
+        gb.gamemap.objects[m.coords].append(m)
+        gb.active_NPCs.append(m)
         ui.UI.new_game(self, gb)
         
         self.layers = [MapLayer(gamemap.Map(gb.gamemap.size), gb.gamemap, self), HUDLayer(gb,self)]

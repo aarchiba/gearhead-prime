@@ -63,8 +63,16 @@ class Advance(Action):
             gameboard.PC.coords = to_x, to_y
             gameboard.gamemap.objects[gameboard.PC.coords].append(gameboard.PC)
         else:
-            raise ActionFailure("Cannot advance into (%i,%i): blocked by terrain"
-                % (to_x, to_y))
+            blocker = "unknown object"
+            if not gameboard.gamemap.terrain((to_x,to_y)).passable:
+                blocker = gameboard.gamemap.terrain((to_x,to_y)).name
+            else:
+                for o in gameboard.gamemap.objects[to_x,to_y]:
+                    if not o.passable:
+                        blocker = o.name
+                        break
+            raise ActionFailure("Cannot advance into (%i,%i): blocked by %s"
+                % (to_x, to_y, blocker))
 
 class OpenDoor(Action):
     def __init__(self, subj, door, coords):

@@ -167,7 +167,9 @@ class Image(yaml.YAMLObject):
     @property
     def image(self):
         return get(self.name, self.recoloring, tuple(self.rect))
-    
+   
+def character_sprites(f, colors=None):
+    return [Image(f, colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)]
 
 if __name__ == '__main__':
     import sys

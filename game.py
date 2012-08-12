@@ -23,11 +23,16 @@
 import yaml
 import image
 
+
 class Character(yaml.YAMLObject):
     yaml_tag = "!Character"    
-    def __init__(self, sprites, orientation=0):
+    def __init__(self, sprites, map=None, orientation=0, coords=(0,0)):
         self.sprites = sprites
         self.orientation = orientation
+        self.map = map
+        self.coords = coords
+        self.opaque = False
+        self.passable = False
     @property
     def sprite(self):
         return self.sprites[self.orientation]
@@ -35,11 +40,14 @@ class Character(yaml.YAMLObject):
 class PC(Character):
     def __init__(self):
         self.colors = image.random_color_scheme("personal")
-        Character.__init__(self, 
-            [image.Image("cha_f_mechanic.png", self.colors, (64*(i%4), 64*(i//4), 64, 64)) for i in range(8)])
-        self.map = None
-        self.coords = (0,0)
+        Character.__init__(self, image.character_sprites("cha_f_mechanic.png",self.colors))
 
+class Monster(Character):
+    def __init__(self, name, sprites, map=None, orientation=0, coords=(0,0), description=None):
+        Character.__init__(self, sprites, map=map, orientation=orientation, coords=coords)
+        self.name = name
+        self.description = description
+    
 
 class Gameboard(yaml.YAMLObject):
     yaml_tag = "!Gameboard"
@@ -49,6 +57,7 @@ class Gameboard(yaml.YAMLObject):
         self.PC = None
         self.messages = ["New game"]
         self.ui = None
+        self.active_NPCs = []
     
     def post_message(self, message):
         self.messages.append(message)
