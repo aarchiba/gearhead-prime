@@ -88,13 +88,13 @@ class MapLayer(Layer):
     def handle(self, event):
         if event.type == pygame.KEYDOWN:
             if event.unicode == u'[':
-                self.ui.command_processor.issue(command.ActionSequence([action.Turn(False)]))
+                self.ui.command_processor.issue(action.Turn(False))
                 return True
             elif event.unicode == u']':
-                self.ui.command_processor.issue(command.ActionSequence([action.Turn(True)]))
+                self.ui.command_processor.issue(action.Turn(True))
                 return True
             elif event.unicode == u'=':
-                self.ui.command_processor.issue(command.ActionSequence([action.Advance()]))
+                self.ui.command_processor.issue(action.Advance())
                 return True
             elif event.key == pygame.K_UP:
                 self.ui.command_processor.issue(command.TurnAndGo(self.ui.gameboard.PC, 7))
