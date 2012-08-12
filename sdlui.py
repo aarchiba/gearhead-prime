@@ -130,11 +130,11 @@ class MapLayer(Layer):
                         if isinstance(o, gamemap.Door):
                             if o.closed and event.unicode==u'O':
                                 self.ui.command_processor.issue(
-                                    command.ActionSequence([action.OpenDoor(self.ui.gameboard.PC, o, c)]))  #FIXME getting hold of the PC and such is getting very verbose...
+                                    action.OpenDoor(self.ui.gameboard.PC, o, c))  #FIXME getting hold of the PC and such is getting very verbose...
                                 return True
                             elif not o.closed and event.unicode==u'C':
                                 self.ui.command_processor.issue(
-                                    command.ActionSequence([action.CloseDoor(self.ui.gameboard.PC, o, c)]))
+                                    action.CloseDoor(self.ui.gameboard.PC, o, c))
                                 return True
                 #FIXME: this will interact with a random appropriate if there is more than one. choice should be given
                 self.ui.gameboard.post_message("No suitable doors found")

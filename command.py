@@ -81,7 +81,12 @@ class CommandProcessor(object):
         self.command_queue = collections.deque()
         
     def issue(self, command):
-        self.command_queue.append(command)
+        if isinstance(command, Command):
+            self.command_queue.append(command)
+        elif isinstance(command, action.Action):
+            self.command_queue.append(ActionSequence([command]))
+        else:
+            raise ValueError("Unable to understand command %s" % command)
         
     def next(self):
         while self.command_queue:
