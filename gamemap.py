@@ -173,7 +173,7 @@ class Map(yaml.YAMLObject):
         #TODO? optionally only return objects inside a certain rect of coords
         ls = set()
         #[[ls.update(set(matches)) for matches in filter(filterfunc, tile_contents)]
-         #   for tile_contents in self.objects.values()]
+        #   for tile_contents in self.objects.values()]
         for tile_contents in self.objects.values():
             for obj in tile_contents:
                 if not filterfunc:
@@ -245,7 +245,7 @@ def load_ascii_map(f):
     w = max(len(l) for l in a)
     a = [l+" "*(w-len(l)) for l in a]
     M = Map((w,len(a)))
-    doors = []
+    doors = set()
     for j, l in enumerate(a):
         for i, c in enumerate(l):
             obj = []
@@ -260,20 +260,20 @@ def load_ascii_map(f):
 
             elif c=='+':
                 c = terrain.floor
-                doors.append((i,j))
+                doors.add((i,j))
 
             else:
                 c = terrain.void
             M.set_terrain((i,j),c)
             M.objects[i,j].extend(obj)
-        for (i,j) in doors:
-            hscore = 0
-            vscore = 0
-            if not M.is_passable((i-1,j)): hscore += 1
-            if not M.is_passable((i+1,j)): hscore += 1
-            if not M.is_passable((i,j+1)): vscore += 1
-            if not M.is_passable((i,j-1)): vscore += 1
-            M.objects[i,j].append(Door(Door.OR_HORI if hscore>vscore else Door.OR_VERT))
+    for (i,j) in doors:
+        hscore = 0
+        vscore = 0
+        if not M.is_passable((i-1,j)): hscore += 1
+        if not M.is_passable((i+1,j)): hscore += 1
+        if not M.is_passable((i,j+1)): vscore += 1
+        if not M.is_passable((i,j-1)): vscore += 1
+        M.objects[i,j].append(Door(Door.OR_HORI if hscore>vscore else Door.OR_VERT))
     return M
 
 
@@ -295,6 +295,13 @@ def adjacent(pos1, pos2):
     x2, y2 = pos2
     return (not pos1==pos2) and abs(x1-x2)<=1 and abs(y1-y2)<=1
 
+def neighbors(coords):
+    i,j = coords
+    for k in [-1,0,1]:
+        for l in [-1,0,1]:
+            if k==0 and l==0:
+                continue
+            yield (i+k,j+l)
 
 class Door(Feature):
     OR_HORI, OR_VERT = 0, 1
@@ -305,6 +312,7 @@ orien: orientation (eg. Door.OR_HORI). None means auto-detect."""
         Feature.__init__(self, 'door', '+', None, description="Door")
         del self._passable, self._opaque, self._sprite
 
+        self.locked = locked
         self.closed = closed
         self.orien = orien
         

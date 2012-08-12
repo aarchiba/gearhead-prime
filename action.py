@@ -59,39 +59,42 @@ class Advance(Action):
         delta_x, delta_y = gamemap.orientation_to_delta[gameboard.PC.orientation]
         to_x, to_y = x+delta_x, y+delta_y
         if gameboard.gamemap.is_passable((to_x,to_y)):
-
-            #check if any doors in the way
-            #doors register as always passable, so pathing can work
-            #if filter(lambda x: isinstance(x,gamemap.Door), gameboard.gamemap.objects)
-            #^ temporarily cancelled: made door.passable depend on open, disadvantage being no pathing through doors
-            #ideally, I think advance should trigger OpenDoor
-
             gameboard.gamemap.objects[gameboard.PC.coords].remove(gameboard.PC)
             gameboard.PC.coords = to_x, to_y
             gameboard.gamemap.objects[gameboard.PC.coords].append(gameboard.PC)
         else:
-            raise ActionFailure, "Cannot advance into (%i,%i): blocked by terrain"\
-                % (to_x, to_y)
+            raise ActionFailure("Cannot advance into (%i,%i): blocked by terrain"
+                % (to_x, to_y))
 
 class OpenDoor(Action):
-    def __init__(self, subj, door):
+    def __init__(self, subj, door, coords):
         self.subj = subj
         self.door = door
+        self.coords = coords
+        # FIXME: check door is actually at coords
     def __call__(self, gameboard):
-        if not gamemap.adjacent(self.subj.coords, self.door.coords):
-            raise ActionFailure, "Cannot open door: not adjacent to it."
+        if not gamemap.adjacent(self.subj.coords, self.coords):
+            raise ActionFailure("Not adjacent to door")
+        if self.door.locked:
+            raise ActionFailure("Door is locked")
         if self.door.closed:
             self.door.closed = False
+        else:
+            raise ActionFailure("Door is already open")
 
 class CloseDoor(Action):
-    def __init__(self, subj, door):
+    def __init__(self, subj, door, coords):
         self.subj = subj
         self.door = door
+        self.coords = coords
+        # FIXME: check door is actually at coords
     def __call__(self, gameboard):
-        if not gamemap.adjacent(self.subj.coords, self.door.coords):
-            raise ActionFailure, "Cannot close door: not next to it."
+        if not gamemap.adjacent(self.subj.coords, self.coords):
+            raise ActionFailure("Not adjacent to door")
         if not self.door.closed:
             self.door.closed = True
+        else:
+            raise ActionFailure("Door is already closed")
 
 
 if __name__=='__main__':
