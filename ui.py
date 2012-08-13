@@ -46,12 +46,17 @@ class UI(object):
             # but if it's a command, put it on the front of the list
             (self.command_processor.next())(self.gameboard)
         except StopIteration:
-            pass
+            return
         except ActionFailure, e:
-			#FIXME: ActionFailure should probably be handled somewhere
-			# other than in a 'ui' module
+			#FIXME: ActionFailure should somehow be communicated back
+            #to the command processor
             self.gameboard.post_message("ActionFailure: %s" % str(e))
-			
+        for n in self.gameboard.active_NPCs:
+            a = n.act()
+            try:
+                a(self.gameboard)
+            except ActionFailure, e:
+                self.gameboard.post_message("ActionFailure for %s: %s" % (n.name, str(e)))
 			
         return self.command_processor.command_queue
         

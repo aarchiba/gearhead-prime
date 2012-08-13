@@ -20,13 +20,16 @@
 #       
 # 
 
+import random
+
 import yaml
 import image
-
+import action
 
 class Character(yaml.YAMLObject):
     yaml_tag = "!Character"    
-    def __init__(self, sprites, map=None, orientation=0, coords=(0,0)):
+    def __init__(self, name, sprites, map=None, orientation=0, coords=(0,0)):
+        self.name = name
         self.sprites = sprites
         self.orientation = orientation
         self.map = map
@@ -40,15 +43,15 @@ class Character(yaml.YAMLObject):
 class PC(Character):
     def __init__(self):
         self.colors = image.random_color_scheme("personal")
-        Character.__init__(self, image.character_sprites("cha_f_mechanic.png",self.colors))
+        Character.__init__(self, "you", image.character_sprites("cha_f_mechanic.png",self.colors))
 
 class Monster(Character):
     def __init__(self, name, sprites, map=None, orientation=0, coords=(0,0), description=None):
-        Character.__init__(self, sprites, map=map, orientation=orientation, coords=coords)
-        self.name = name
+        Character.__init__(self, name, sprites, map=map, orientation=orientation, coords=coords)
         self.description = description
+    def act(self):
+        return random.choice([action.Advance(self), action.Turn(self,1), action.Turn(self,0)])
     
-
 class Gameboard(yaml.YAMLObject):
     yaml_tag = "!Gameboard"
     

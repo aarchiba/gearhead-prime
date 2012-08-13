@@ -24,12 +24,7 @@ import random
 
 import action
 
-class Actor(object):
-    
-    def next(self):
-        return None
-
-class Wanderer(Actor):
+class MonsterBrain(object):
     def next(self):
         return random.choice([action.Advance(), action.Turn(1), action.Turn(0)])
 

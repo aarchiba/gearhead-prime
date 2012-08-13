@@ -40,34 +40,37 @@ class Action(object):
     world passes through actions; they handle making sure that (for
     example) things that are supposed to take time, do take time.
     """
+    def __init__(self, char):
+        self.char = char
     def __call__(self, gameboard):
         raise NotImplemented
 
 class Turn(Action):
-    def __init__(self, right): #FIXME: does 'right' mean clockwise?
+    def __init__(self, char, right): #FIXME: does 'right' mean clockwise?
+        Action.__init__(self, char)
         self.right = right
     def __call__(self, gameboard):
         if self.right:
-            gameboard.PC.orientation += 1
+            self.char.orientation += 1
         else:
-            gameboard.PC.orientation -= 1
-        gameboard.PC.orientation %= 8
+            self.char.orientation -= 1
+        self.char.orientation %= 8
 
 class Advance(Action):
     def __call__(self, gameboard):
-        x, y = gameboard.PC.coords
-        delta_x, delta_y = gamemap.orientation_to_delta[gameboard.PC.orientation]
+        x, y = self.char.coords
+        delta_x, delta_y = gamemap.orientation_to_delta[self.char.orientation]
         to_x, to_y = x+delta_x, y+delta_y
-        if gameboard.gamemap.is_passable((to_x,to_y)):
-            gameboard.gamemap.objects[gameboard.PC.coords].remove(gameboard.PC)
-            gameboard.PC.coords = to_x, to_y
-            gameboard.gamemap.objects[gameboard.PC.coords].append(gameboard.PC)
+        if self.char.map.is_passable((to_x,to_y)):
+            self.char.map.objects[self.char.coords].remove(self.char)
+            self.char.coords = to_x, to_y
+            self.char.map.objects[self.char.coords].append(self.char)
         else:
             blocker = "unknown object"
-            if not gameboard.gamemap.terrain((to_x,to_y)).passable:
-                blocker = gameboard.gamemap.terrain((to_x,to_y)).name
+            if not self.char.map.terrain((to_x,to_y)).passable:
+                blocker = self.char.map.terrain((to_x,to_y)).name
             else:
-                for o in gameboard.gamemap.objects[to_x,to_y]:
+                for o in self.char.map.objects[to_x,to_y]:
                     if not o.passable:
                         blocker = o.name
                         break
@@ -75,13 +78,13 @@ class Advance(Action):
                 % (to_x, to_y, blocker))
 
 class OpenDoor(Action):
-    def __init__(self, subj, door, coords):
-        self.subj = subj
+    def __init__(self, char, door, coords):
+        Action.__init__(self, char)
         self.door = door
         self.coords = coords
         # FIXME: check door is actually at coords
     def __call__(self, gameboard):
-        if not gamemap.adjacent(self.subj.coords, self.coords):
+        if not gamemap.adjacent(self.char.coords, self.coords):
             raise ActionFailure("Not adjacent to door")
         if self.door.locked:
             raise ActionFailure("Door is locked")
@@ -91,13 +94,13 @@ class OpenDoor(Action):
             raise ActionFailure("Door is already open")
 
 class CloseDoor(Action):
-    def __init__(self, subj, door, coords):
-        self.subj = subj
+    def __init__(self, char, door, coords):
+        Action.__init__(self, char)
         self.door = door
         self.coords = coords
         # FIXME: check door is actually at coords
     def __call__(self, gameboard):
-        if not gamemap.adjacent(self.subj.coords, self.coords):
+        if not gamemap.adjacent(self.char.coords, self.coords):
             raise ActionFailure("Not adjacent to door")
         if not self.door.closed:
             self.door.closed = True

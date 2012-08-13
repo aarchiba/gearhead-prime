@@ -55,8 +55,8 @@ def ActionSequence(al):
 def TurnAndGo(PC, orientation):
     while PC.orientation != orientation:
         d = (4+orientation-PC.orientation) % 8 - 4
-        yield action.Turn(d>0)
-    yield action.Advance()
+        yield action.Turn(PC, d>0)
+    yield action.Advance(PC)
 
 @command_wrapper
 def GoTo(PC,current_map,coords):
@@ -70,9 +70,9 @@ def GoTo(PC,current_map,coords):
             o = gamemap.find_orientation(c,n)
             if o != PC.orientation: 
                 d = (4+o-PC.orientation) % 8 - 4
-                yield action.Turn(d>0)
+                yield action.Turn(PC, d>0)
             else:
-                yield action.Advance()
+                yield action.Advance(PC)
         else:
             break
     
