@@ -61,6 +61,8 @@ class Gameboard(yaml.YAMLObject):
         self.messages = ["New game"]
         self.ui = None
         self.active_NPCs = []
+        self.time = 0
+        self.next_actor = []
     
     def post_message(self, message):
         self.messages.append(message)

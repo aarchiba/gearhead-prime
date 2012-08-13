@@ -19,6 +19,7 @@
 #       MA 02110-1301, USA.
 #       
 # 
+import heapq
 
 import yaml
 import command
@@ -33,7 +34,11 @@ class UI(object):
         
     def new_game(self, gameboard):
         self.gameboard = gameboard
-        gameboard.ui = self        
+        gameboard.ui = self
+        heapq.heappush(self.gameboard.next_actor,(0,self.gameboard.PC))
+        for n in self.gameboard.active_NPCs:
+            heapq.heappush(self.gameboard.next_actor, (0,n))
+                
     def load_game(self):
         self.gameboard = yaml.load(open(self.save_name, 'rt'))
         gameboard.ui = self        
@@ -41,22 +46,36 @@ class UI(object):
         yaml.dump(self.gameboard, open(self.save_name, 'wt'))
     
     def act(self):
-        try:
-            # FIXME: if it's an action, do it
-            # but if it's a command, put it on the front of the list
-            (self.command_processor.next())(self.gameboard)
-        except StopIteration:
-            return
-        except ActionFailure, e:
-			#FIXME: ActionFailure should somehow be communicated back
-            #to the command processor
-            self.gameboard.post_message("ActionFailure: %s" % str(e))
-        for n in self.gameboard.active_NPCs:
-            a = n.act()
+        """Make one action happen
+        
+        Whoever's turn it is to move next gets to execute one action.
+        This action takes time (in an amount returned by the action)
+        so they don't get scheduled again until it finishes. If the
+        next action is up to the user and they haven't chosen one yet,
+        return and don't advance the clock.
+        """
+        self.gameboard.time, char = heapq.heappop(self.gameboard.next_actor)
+        if char is self.gameboard.PC:
             try:
-                a(self.gameboard)
+                dt = (self.command_processor.next())(self.gameboard)
+                heapq.heappush(self.gameboard.next_actor, (self.gameboard.time+dt, self.gameboard.PC))
+            except StopIteration:
+                heapq.heappush(self.gameboard.next_actor, (self.gameboard.time, self.gameboard.PC))
+                return
             except ActionFailure, e:
-                self.gameboard.post_message("ActionFailure for %s: %s" % (n.name, str(e)))
+                #FIXME: ActionFailure should somehow be communicated back
+                #to the command processor
+                self.gameboard.post_message("ActionFailure: %s" % str(e))
+                #FIXME: failed actions should take time too (specify it in the exception?)
+                heapq.heappush(self.gameboard.next_actor, (self.gameboard.time, self.gameboard.PC))
+        else:
+            a = char.act()
+            try:
+                dt = a(self.gameboard)
+                heapq.heappush(self.gameboard.next_actor, (self.gameboard.time+dt, char))
+            except ActionFailure, e:
+                self.gameboard.post_message("ActionFailure for %s: %s" % (char.name, str(e)))
+                heapq.heappush(self.gameboard.next_actor, (self.gameboard.time, char))
 			
         return self.command_processor.command_queue
         

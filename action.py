@@ -55,6 +55,7 @@ class Turn(Action):
         else:
             self.char.orientation -= 1
         self.char.orientation %= 8
+        return 100 #milliseconds
 
 class Advance(Action):
     def __call__(self, gameboard):
@@ -65,6 +66,7 @@ class Advance(Action):
             self.char.map.objects[self.char.coords].remove(self.char)
             self.char.coords = to_x, to_y
             self.char.map.objects[self.char.coords].append(self.char)
+            return 500 #milliseconds
         else:
             blocker = "unknown object"
             if not self.char.map.terrain((to_x,to_y)).passable:
@@ -90,6 +92,7 @@ class OpenDoor(Action):
             raise ActionFailure("Door is locked")
         if self.door.closed:
             self.door.closed = False
+            return 500 #milliseconds
         else:
             raise ActionFailure("Door is already open")
 
@@ -104,6 +107,7 @@ class CloseDoor(Action):
             raise ActionFailure("Not adjacent to door")
         if not self.door.closed:
             self.door.closed = True
+            return 500 #milliseconds
         else:
             raise ActionFailure("Door is already closed")
 
